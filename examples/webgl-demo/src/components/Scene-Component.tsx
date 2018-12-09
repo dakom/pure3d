@@ -1,26 +1,33 @@
 import * as React from "react";
 import {SCENE} from "types/Types";
 import {LoaderView} from "view/Loader-View";
+import {ErrorView} from "view/Error-View";
 import {SceneView} from "view/Scene-View";
 type WasmLib = typeof import("../../target/webgl_demo");
 
+enum PHASE {
+    LOADING = "loading",
+    ERROR = "error",
+    READY = "ready"
+}
 interface Props {
     scene: SCENE;
 }
 
 interface State {
-    loaded:boolean;
+    phase: PHASE;
+    errorMessage?: string;
 }
 
 const loadWasm = (() => {
     let _loader:Promise<WasmLib>;
     let _wasmLib:WasmLib;
 
-    const getLib = () => new Promise(resolve => 
+    const getLib = ():Promise<WasmLib> => new Promise(resolve => {
            _wasmLib !== undefined
                ? resolve(_wasmLib)
-               : getLoader()
-    );
+               : resolve(getLoader())
+    });
 
     const getLoader = () => {
         if(_loader === undefined) {
@@ -31,14 +38,14 @@ const loadWasm = (() => {
         return _loader;
     }
 
-    return getLoader;
+    return getLib;
 })();
 
 export class Scene extends React.Component<Props, State> {
     private canvasRef = React.createRef<HTMLCanvasElement>();
 
     readonly state:State = {
-        loaded: false
+        phase: PHASE.LOADING
     }
 
     componentDidMount() {
@@ -53,26 +60,34 @@ export class Scene extends React.Component<Props, State> {
 
     loadScene() {
         loadWasm().then(wasmLib => {
-        /*
-         * 1. Mount the canvas - DONE!
-         * 2. Pass canvas and onLoaded callback to WASM
-         * 3. WASM will create context and load things
-         * 4. WASM will call the onLoaded callback
-         * 5. React will change state to loaded (and no longer show the UI Loader)
-         */
-            //TODO: pass canvasRef.current to WASM (real asset loading will upload to gpu)
-            wasmLib.load_assets(this.props.scene, () => this.setState({loaded: false}));
+            wasmLib.load_assets(
+                this.canvasRef.current, 
+                this.props.scene, 
+                () => this.setState({phase: PHASE.READY}),
+                (errorMessage:string) => 
+                    this.setState({phase: PHASE.ERROR, errorMessage}),
+            )
         })
     }
 
     render() {
         const {scene} = this.props;
-        const {loaded} = this.state;
+        const {phase, errorMessage} = this.state;
 
         return (
             <React.Fragment>
                 <SceneView canvasRef={this.canvasRef} />
-                {!loaded && <LoaderView />}
+                {(() => {
+                    switch(phase) {
+                        case PHASE.LOADING:
+                            return <LoaderView />
+                        case PHASE.ERROR:
+                            return <ErrorView message={errorMessage} scene={scene} />
+                        case PHASE.READY:
+                        default: return null;
+                    }
+                })()}
+                
             </React.Fragment>
         )
 
