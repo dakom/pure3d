@@ -1,0 +1,94 @@
+* {
+    margin: 0px; 
+    padding: 0px;
+}
+#app {
+
+    width: 100vw;
+    height: 100vh;
+/* Gradient color via https://stackoverflow.com/a/20171195/784519 */
+
+    background: rgb(76,76,76); /* Old browsers */
+    background: -moz-radial-gradient(center, ellipse cover, rgba(76,76,76,1) 0%, rgba(89,89,89,1) 0%, rgba(17,17,17,1) 100%); /* FF3.6+ */
+    background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%,rgba(76,76,76,1)), color-stop(0%,rgba(89,89,89,1)), color-stop(100%,rgba(17,17,17,1))); /* Chrome,Safari4+ */
+    background: -webkit-radial-gradient(center, ellipse cover, rgba(76,76,76,1) 0%,rgba(89,89,89,1) 0%,rgba(17,17,17,1) 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-radial-gradient(center, ellipse cover, rgba(76,76,76,1) 0%,rgba(89,89,89,1) 0%,rgba(17,17,17,1) 100%); /* Opera 12+ */
+    background: -ms-radial-gradient(center, ellipse cover, rgba(76,76,76,1) 0%,rgba(89,89,89,1) 0%,rgba(17,17,17,1) 100%); /* IE10+ */
+    background: radial-gradient(ellipse at center, rgba(76,76,76,1) 0%,rgba(89,89,89,1) 0%,rgba(17,17,17,1) 100%); /* W3C */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#4c4c4c', endColorstr='#111111',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+
+    font-family: sans-serif;
+}
+
+#canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    touch-action: none;
+}
+
+#loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+}
+
+.loader__text {
+    line-height: 100vh;
+    text-align: center;
+    color: white;
+    font-weight: bold;
+}
+.loader__graphic {
+    --size: 10em;
+    --halfSize: calc(var(--size)/2);
+    --nHalfSize: calc(var(--halfSize) * -1);
+
+    position: fixed;
+    width: var(--size);
+    height: var(--size);
+    left: calc((100vw - var(--size))/2);
+    top: calc((100vh - var(--size))/2);
+
+    border-radius: 50%;
+    box-shadow: 0 4px 0 0 #e50914;
+
+    -webkit-animation: loader__graphic 1s linear infinite;
+    animation: loader__graphic 1s linear infinite;
+
+    -webkit-transform-origin: var(--halfSize) var(--halfSize); 
+    transform-origin: var(--halfSize) var(--halfSize); 
+}
+
+@keyframes loader__graphic {
+    0% {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+    50% {
+        -webkit-transform: rotate(180deg);
+        transform: rotate(180deg);
+    }
+    100% {
+        -webkit-transform: rotate(360deg);
+        transform: rotate(360deg);
+    }
+}
+@-webkit-keyframes loader__graphic {
+    0% {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+    50% {
+        -webkit-transform: rotate(180deg);
+        transform: rotate(180deg);
+    }
+    100% {
+        -webkit-transform: rotate(360deg);
+        transform: rotate(360deg);
+    }
+}

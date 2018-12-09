@@ -1,0 +1,30 @@
+[package]
+name = "webgl-demo"
+version = "0.1.0"
+authors = ["David Komer <david.komer@gmail.com>"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = "0.2.29"
+js-sys = "0.3.6"
+pure3d-webgl = { path = "../../crates/webgl" }
+
+[dependencies.web-sys]
+version = "0.3.6"
+features = [
+  'CanvasRenderingContext2d',
+  'CssStyleDeclaration',
+  'Document',
+  'DomRect',
+  'Element',
+  'EventTarget',
+  'HtmlCanvasElement',
+  'HtmlElement',
+  'MouseEvent',
+  'Node',
+  'Window',
+  'console',
+]

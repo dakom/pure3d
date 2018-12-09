@@ -1,0 +1,21 @@
+ul.menu {
+    position: fixed;
+    li {
+        cursor: pointer;
+        display: inline-block;
+        color: white;
+        padding: 1em 2em;
+        margin: .5em .5em;
+        background-color: grey;
+        border-radius: 10px;
+
+        &.selected {
+            color: darkred;
+        }
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+
+}
