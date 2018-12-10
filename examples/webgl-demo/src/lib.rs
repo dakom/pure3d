@@ -72,12 +72,12 @@ fn log_str(s:String) {
     console::log_1(&JsValue::from_str(&s[..]));
 }
 
-/* For debugging VIM plugin
+//For showing the weird diagnostics bug!
+//See https://github.com/rustwasm/wasm-bindgen/issues/1097
 #[wasm_bindgen]
 pub extern fn foo () {
-    log_foo(String::from("foo"));
+    //purposefully the wrong type 
+    //the error is only displayed at the top of the file!
+    log_str("foo");
 }
 
-fn log_foo(s:&str) {
-}
-*/
