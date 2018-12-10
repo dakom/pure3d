@@ -71,13 +71,3 @@ fn draw_happy_face(context: web_sys::CanvasRenderingContext2d) {
 fn log_str(s:String) {
     console::log_1(&JsValue::from_str(&s[..]));
 }
-
-//For showing the weird diagnostics bug!
-//See https://github.com/rustwasm/wasm-bindgen/issues/1097
-#[wasm_bindgen]
-pub extern fn foo () {
-    //purposefully the wrong type 
-    //the error is only displayed at the top of the file!
-    log_str("foo");
-}
-
