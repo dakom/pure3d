@@ -8,7 +8,7 @@ use std::f64;
 
 
 #[wasm_bindgen]
-pub extern fn load_assets(
+pub extern "C" fn load_assets(
     canvas: web_sys::HtmlCanvasElement, 
     scene_name: &str, 
     on_load: js_sys::Function,
