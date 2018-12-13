@@ -5,7 +5,7 @@ extern crate wasm_bindgen;
 use wasm_bindgen::prelude::*;
 use web_sys::console;
 use std::f64;
-use pure3d_webgl::get_canvas_context;
+use pure3d_webgl::canvas::get_canvas_context; 
 
 #[wasm_bindgen]
 pub extern "C" fn load_assets(
