@@ -10,7 +10,7 @@ crate-type = ["cdylib"]
 [dependencies]
 wasm-bindgen = "0.2.29"
 js-sys = "0.3.6"
-pure3d-webgl = { path = "../../crates/webgl" }
+pure3d_webgl = { path = "../../crates/pure3d_webgl" }
 
 [dependencies.web-sys]
 version = "0.3.6"

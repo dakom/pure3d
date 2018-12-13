@@ -1,5 +1,5 @@
 [package]
-name = "pure3d-webgl"
+name = "pure3d_webgl"
 edition = "2018"
 version = "0.0.1"
 authors = ["David Komer<david.komer@gmail.com.com>"]

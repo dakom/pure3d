@@ -1,11 +1,11 @@
 extern crate web_sys; 
 extern crate js_sys;
 extern crate wasm_bindgen;
+
 use wasm_bindgen::prelude::*;
 use web_sys::console;
-use wasm_bindgen::JsCast;
 use std::f64;
-
+use pure3d_webgl::get_canvas_context;
 
 #[wasm_bindgen]
 pub extern "C" fn load_assets(
@@ -28,17 +28,6 @@ pub extern "C" fn load_assets(
     };
 }
 
-fn get_canvas_context(canvas: web_sys::HtmlCanvasElement) -> Option<web_sys::CanvasRenderingContext2d> {
-    canvas
-        .get_context("2d")
-        .ok()
-        .and_then(|object| object)
-        .and_then(|object| {
-            object
-                .dyn_into::<web_sys::CanvasRenderingContext2d>()
-                .ok() 
-        })
-}
 
 fn draw_happy_face(context: web_sys::CanvasRenderingContext2d) {
 
