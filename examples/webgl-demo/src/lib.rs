@@ -5,11 +5,11 @@ extern crate wasm_bindgen;
 use wasm_bindgen::prelude::*;
 use web_sys::console;
 use std::f64;
-use pure3d_webgl::canvas::get_canvas_context; 
+use pure3d_webgl::*; 
 
 #[wasm_bindgen]
 pub extern "C" fn load_assets(
-    canvas: web_sys::HtmlCanvasElement, 
+    canvas_element: web_sys::HtmlCanvasElement, 
     scene_name: &str, 
     on_load: js_sys::Function,
     on_error: js_sys::Function,
@@ -17,10 +17,17 @@ pub extern "C" fn load_assets(
 
     let this = &JsValue::NULL;
 
-    match get_canvas_context(canvas) {
-        Some(foo) => {
-            draw_happy_face(foo);
-            on_load.call0(this);
+    let vertex_shader_source  = include_str!("shaders/Quad-Vertex.glsl");
+    let fragment_shader_source  = include_str!("shaders/Quad-Fragment.glsl");
+
+    match canvas::get_canvas_context(canvas_element, canvas::ContextType::Gl(canvas::WebGlVersion::One)) {
+        Some(gl) => {
+            let result = shader::compile_shader(&gl, vertex_shader_source, fragment_shader_source);
+            match result {
+                Ok(program) => log_str("Got program!!!"),
+                Err(msg) => log_str(msg)
+            }
+            //on_load.call0(this);
         },
         None => {
             on_error.call1(this, &JsValue::from_str("Couldn't get Canvas Context!"));
@@ -28,35 +35,12 @@ pub extern "C" fn load_assets(
     };
 }
 
-
-fn draw_happy_face(context: web_sys::CanvasRenderingContext2d) {
-
-    context.begin_path();
-
-    // Draw the outer circle.
-    context
-        .arc(75.0, 75.0, 50.0, 0.0, f64::consts::PI * 2.0)
-        .unwrap();
-
-    // Draw the mouth.
-    context.move_to(110.0, 75.0);
-    context.arc(75.0, 75.0, 35.0, 0.0, f64::consts::PI).unwrap();
-
-    // Draw the left eye.
-    context.move_to(65.0, 65.0);
-    context
-        .arc(60.0, 65.0, 5.0, 0.0, f64::consts::PI * 2.0)
-        .unwrap();
-
-    // Draw the right eye.
-    context.move_to(95.0, 65.0);
-    context
-        .arc(90.0, 65.0, 5.0, 0.0, f64::consts::PI * 2.0)
-        .unwrap();
-
-    context.stroke();
+fn draw_quad(context: web_sys::WebGlRenderingContext) {
 }
 
-fn log_str(s:String) {
-    console::log_1(&JsValue::from_str(&s[..]));
+fn log_string(s:String) {
+    log_str(&s[..]);
+}
+fn log_str(s:&str) {
+    console::log_1(&JsValue::from_str(s));
 }

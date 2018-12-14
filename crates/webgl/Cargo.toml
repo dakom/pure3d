@@ -23,15 +23,10 @@ js-sys = "0.3.6"
 version = "0.3.6"
 features = [
   'CanvasRenderingContext2d',
-  'CssStyleDeclaration',
-  'Document',
-  'DomRect',
-  'Element',
-  'EventTarget',
+  'WebGlRenderingContext',
+  'WebGl2RenderingContext',
   'HtmlCanvasElement',
-  'HtmlElement',
-  'MouseEvent',
-  'Node',
-  'Window',
-  'console',
+  'WebGlProgram',
+  'WebGlShader',
+
 ]
