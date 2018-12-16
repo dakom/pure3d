@@ -25,7 +25,7 @@ pub extern "C" fn load_assets(
             let result = shader::compile_shader(&gl, vertex_shader_source, fragment_shader_source);
             match result {
                 Ok(program) => log_str("Got program!!!"),
-                Err(msg) => log_str(msg)
+                Err(msg) => log_string(msg)
             }
             //on_load.call0(this);
         },
