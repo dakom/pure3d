@@ -18,8 +18,9 @@ struct CompileSteps {
     program: Option<WebGlProgram>,
     fragment: Option<WebGlShader>,
     vertex: Option<WebGlShader>,
-    error_message: String,
 }
+
+type WithError<T> = Result<T,(T,String)>;
 
 impl CompileSteps {
     pub fn new() -> CompileSteps {
@@ -27,7 +28,6 @@ impl CompileSteps {
             program: None,
             fragment: None,
             vertex: None,
-            error_message: String::from("unknown error!")
         }
     }
 
@@ -73,28 +73,27 @@ pub fn compile_shader(gl:&WebGlRenderingContext, vertex:&str, fragment:&str) -> 
             compile_steps.free_shaders(gl);
             Ok(compile_steps.program.unwrap())
         }
-        Err(mut compile_steps) => {
+        Err((mut compile_steps, error_message)) => {
             compile_steps.free_all(gl);
-            Err(compile_steps.error_message)
+            Err(error_message)
         }
     }
 
 }
 
-fn create_program (gl:&WebGlRenderingContext, mut compile_steps:CompileSteps) -> Result<CompileSteps, CompileSteps> {
+fn create_program (gl:&WebGlRenderingContext, mut compile_steps:CompileSteps) -> WithError<CompileSteps> { 
     match gl.create_program() {
         Some(program) => {
             compile_steps.program = Some(program);
             Ok(compile_steps)
         }
         None => {
-            compile_steps.error_message = String::from("Couldn't create program (unknown error");
-            Err(compile_steps)
+            Err((compile_steps, String::from("Couldn't create program (unknown error")))
         }
     }
 }
 
-fn compile_source (gl:&WebGlRenderingContext, mut compile_steps:CompileSteps, source: &str, source_type:u32) -> Result<CompileSteps, CompileSteps> {
+fn compile_source (gl:&WebGlRenderingContext, mut compile_steps:CompileSteps, source: &str, source_type:u32) -> WithError<CompileSteps> { 
     let option_shader = gl.create_shader(source_type);
 
     match option_shader {
@@ -103,8 +102,7 @@ fn compile_source (gl:&WebGlRenderingContext, mut compile_steps:CompileSteps, so
             gl.compile_shader(&shader);
             match do_with_check( || gl.get_shader_parameter(&shader, WebGlRenderingContext::COMPILE_STATUS), || gl.get_shader_info_log(&shader)) {
                 Some(error_message) => {
-                    compile_steps.error_message = error_message;
-                    Err(compile_steps)
+                    Err((compile_steps, error_message))
                 }
                 None => {
                     gl.attach_shader(&compile_steps.program.as_ref().unwrap(), &shader);
@@ -119,20 +117,18 @@ fn compile_source (gl:&WebGlRenderingContext, mut compile_steps:CompileSteps, so
 
         }
         None => {
-            compile_steps.error_message = String::from("bad shader (unknown error");
-            Err(compile_steps)
+            Err((compile_steps, String::from("bad shader (unknown error")))
         }
     }
 }
 
-fn link_program (gl:&WebGlRenderingContext, mut compile_steps:CompileSteps) -> Result<CompileSteps, CompileSteps> { 
+fn link_program (gl:&WebGlRenderingContext, mut compile_steps:CompileSteps) -> WithError<CompileSteps> { 
     let program = &compile_steps.program.as_ref().unwrap();
     gl.link_program(program);
 
     match do_with_check( || gl.get_program_parameter(program, WebGlRenderingContext::LINK_STATUS), || gl.get_program_info_log(program)) {
         Some(error_message) => {
-            compile_steps.error_message = error_message;
-            Err(compile_steps)
+            Err((compile_steps, error_message))
         }
         None => Ok(compile_steps)
     }
