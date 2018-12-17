@@ -3,7 +3,8 @@ extern crate js_sys;
 extern crate wasm_bindgen;
 
 use web_sys::{console, WebGlRenderingContext, WebGlProgram, WebGlShader};
-use js_sys::{Float32Array};
+use js_sys::{Float32Array, WebAssembly};
+use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::*;
 use std::f64;
 use pure3d_webgl::*; 
@@ -46,7 +47,7 @@ fn start_demo(gl:&WebGlRenderingContext, program:&WebGlProgram) {
             0.0,0.0, //bottom-left
             1.0, 1.0, // top-right
             1.0, 0.0 // bottom-right
-    ]);
+    ]).unwrap();
     let buffer = gl.create_buffer();
     gl.use_program(Some(program));
     gl.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, buffer.as_ref()); 
@@ -67,30 +68,16 @@ fn start_demo(gl:&WebGlRenderingContext, program:&WebGlProgram) {
 
 }
 
-fn create_array_buffer(gl:&WebGlRenderingContext, values:Vec<f32>) -> Float32Array {
-    let ary = Float32Array::new(&4.into());
-    
-    for (i, val) in values.iter().enumerate() {
-        ary.fill(*val, i as u32, (i as u32)+1);
-    }
+fn create_array_buffer(gl:&WebGlRenderingContext, values:Vec<f32>) -> Result<Float32Array, JsValue> {
+    wasm_bindgen::memory()
+        .dyn_into::<WebAssembly::Memory>()
+        .map(|m:WebAssembly::Memory| {
+            let buffer = m.buffer();
+            let ptr_loc = values.as_ptr() as u32 / 4;
 
-    ary
-    
-/*
-    let ptr_loc = values.as_ptr() as u32 / 4;
-
-    let memory_buffer = wasm_bindgen::memory()
-      .dyn_into::<WebAssembly::Memory>()
-      .unwrap()
-      .buffer();
-
-    js_sys::Float32Array::new(&memory_buffer)
-        .subarray(ptr_loc, ptr_loc + values.len() as u32)
-        */
-    /* would be nice!
-    let float_array = Float32Array::new(&4.into());
-    float_array[0] = JsValue::from_f64(1.0);
-    */
+            js_sys::Float32Array::new(&buffer)
+                .subarray(ptr_loc, ptr_loc + values.len() as u32)
+        })
 }
 
 fn draw_quad(context: web_sys::WebGlRenderingContext) {
