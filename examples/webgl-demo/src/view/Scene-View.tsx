@@ -6,5 +6,5 @@ interface Props {
 }
 
 export const SceneView = ({canvasRef}:Props) => (
-    <canvas ref={canvasRef} className="canvas" touch-action="none"></canvas>
+    <canvas ref={canvasRef} id="canvas" className="canvas" touch-action="none"></canvas>
 )

@@ -10,7 +10,7 @@
     "_clean:rust": "rimraf ./target",
     "_dev:webpack-server": "cross-env NODE_ENV=development webpack-dev-server --progress --open --config webpack.dev.js",
     "_dev:watch:rust": "chokidar \"../../**/*.rs\" \"../../**/*.glsl\" -c \"npm run _build:rust:dev\"",
-    "_build:rust:prod": "cargo +nightly build --target wasm32-unknown-unknown --release && npm run _rust:bindgen:release",
+    "_build:rust:prod": "cargo +nightly build --target wasm32-unknown-unknown --release && npm run _rust:bindgen:prod",
     "_build:rust:dev": "cargo +nightly build --target wasm32-unknown-unknown && npm run _rust:bindgen:dev",
     "_rust:bindgen:dev": "mkdir -p ./target && cp ../../target/wasm32-unknown-unknown/debug/webgl*demo* ./target/ && wasm-bindgen ./target/webgl_demo.wasm --out-dir ./target",
     "_rust:bindgen:prod": "mkdir -p ./target && cp ../../target/wasm32-unknown-unknown/release/webgl*demo* ./target/ && wasm-bindgen ./target/webgl_demo.wasm --out-dir ./target"
