@@ -1,6 +1,6 @@
-Pure3D is a WebGL/Wasm renderer 
+## About
 
-For now it's a rebuild of https://github.com/dakom/pure3d-typescript
+Pure3D is a WebGL/Wasm renderer, conceptually a rebuild of [the typescript version](https://github.com/dakom/pure3d-typescript)
 
 This time in Rust!
 
