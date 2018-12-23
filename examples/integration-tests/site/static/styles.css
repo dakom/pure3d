@@ -1,14 +1,17 @@
+:root {
+    box-sizing: border-box;
+    font-family: sans-serif;
+}
 * {
     margin: 0px; 
     padding: 0px;
+    box-sizing: inherit;
 }
 #app {
 
     width: 100vw;
     height: 100vh;
     background-color: #2a2a2a;
-
-    font-family: sans-serif;
 }
 
 #canvas {

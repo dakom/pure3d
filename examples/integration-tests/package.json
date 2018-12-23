@@ -1,9 +1,9 @@
 {
-  "name": "webgl-demo",
+  "name": "integration_tests",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "clean": "rimraf ./dist/* && rimraf ./target",
+    "clean": "rimraf ./dist && rimraf ./target",
     "bundle": "npm run _clean:dist && npm run _build:rust:prod && cross-env NODE_ENV=production webpack --progress --config webpack.prod.js && cp -R ./site/static ./dist/ && cp ./site/_redirects ./dist/",
     "dev": "npm run _build:rust:dev && npm-run-all -p _dev:webpack-server _dev:watch:rust",
     "_clean:dist": "rimraf ./dist",
@@ -12,8 +12,8 @@
     "_dev:watch:rust": "chokidar \"../../**/*.rs\" \"../../**/*.glsl\" -c \"npm run _build:rust:dev\"",
     "_build:rust:prod": "cargo +nightly build --target wasm32-unknown-unknown --release && npm run _rust:bindgen:prod",
     "_build:rust:dev": "cargo +nightly build --target wasm32-unknown-unknown && npm run _rust:bindgen:dev",
-    "_rust:bindgen:dev": "mkdir -p ./target && cp ../../target/wasm32-unknown-unknown/debug/webgl*demo* ./target/ && wasm-bindgen ./target/webgl_demo.wasm --out-dir ./target",
-    "_rust:bindgen:prod": "mkdir -p ./target && cp ../../target/wasm32-unknown-unknown/release/webgl*demo* ./target/ && wasm-bindgen ./target/webgl_demo.wasm --out-dir ./target"
+    "_rust:bindgen:dev": "mkdir -p ./target && cp ../../target/wasm32-unknown-unknown/debug/integration_tests* ./target/ && wasm-bindgen ./target/integration_tests.wasm --out-dir ./target",
+    "_rust:bindgen:prod": "mkdir -p ./target && cp ../../target/wasm32-unknown-unknown/release/integration_tests* ./target/ && wasm-bindgen ./target/integration_tests.wasm --out-dir ./target"
   },
   "author": "",
   "license": "MIT",

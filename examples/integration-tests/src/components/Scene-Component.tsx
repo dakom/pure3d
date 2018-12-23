@@ -3,7 +3,7 @@ import {SCENE} from "types/Types";
 import {LoaderView} from "view/Loader-View";
 import {ErrorView} from "view/Error-View";
 import {SceneView} from "view/Scene-View";
-type WasmLib = typeof import("../../target/webgl_demo");
+type WasmLib = typeof import("../../target/integration_tests");
 
 enum PHASE {
     LOADING = "loading",
@@ -31,7 +31,7 @@ const loadWasm = (() => {
 
     const getLoader = () => {
         if(_loader === undefined) {
-            _loader = import("../../target/webgl_demo");
+            _loader = import("../../target/integration_tests");
             _loader.then(wasmLib => _wasmLib = wasmLib);
         }
 
