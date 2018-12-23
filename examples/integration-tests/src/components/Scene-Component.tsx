@@ -63,9 +63,13 @@ export class Scene extends React.Component<Props, State> {
             wasmLib.load_assets(
                 this.canvasRef.current, 
                 this.props.scene, 
-                () => this.setState({phase: PHASE.READY}),
-                (errorMessage:string) => 
-                    this.setState({phase: PHASE.ERROR, errorMessage}),
+                () => {
+                    this.setState({phase: PHASE.READY})
+                },
+                (errorMessage:any) => {
+                    console.error(errorMessage)
+                    this.setState({phase: PHASE.ERROR, errorMessage});
+                }
             )
         })
     }
