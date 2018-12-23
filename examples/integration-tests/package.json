@@ -5,7 +5,8 @@
   "scripts": {
     "clean": "rimraf ./dist && rimraf ./target",
     "bundle": "npm run _clean:dist && npm run _build:rust:prod && cross-env NODE_ENV=production webpack --progress --config webpack.prod.js && cp -R ./site/static ./dist/ && cp ./site/_redirects ./dist/",
-    "dev": "npm run _build:rust:dev && npm-run-all -p _dev:webpack-server _dev:watch:rust",
+    "dev": "npm run _build:rust:dev && npm-run-all -p _dev:server _dev:webpack-server _dev:watch:rust",
+    "_dev:server": "http-server ../assets",
     "_clean:dist": "rimraf ./dist",
     "_clean:rust": "rimraf ./target",
     "_dev:webpack-server": "cross-env NODE_ENV=development webpack-dev-server --progress --open --config webpack.dev.js",
@@ -26,6 +27,7 @@
     "css-loader": "^2.0.0",
     "fork-ts-checker-webpack-plugin": "0.5.0",
     "html-webpack-plugin": "3.2.0",
+    "http-server": "^0.11.1",
     "node-sass": "^4.11.0",
     "npm-run-all": "4.1.5",
     "rimraf": "2.6.2",
