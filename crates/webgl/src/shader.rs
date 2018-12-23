@@ -4,7 +4,7 @@ extern crate wasm_bindgen;
 
 use web_sys::{WebGlRenderingContext, WebGlProgram, WebGlShader};
 use wasm_bindgen::prelude::JsValue;
-
+use super::errors::*;
 /*
  * TODO
  * 1. Have cleanup_shaders() to detatch and delete shader
@@ -20,7 +20,7 @@ struct CompileSteps {
     vertex: Option<WebGlShader>,
 }
 
-type WithError<T> = Result<T,(T,String)>;
+type WithError<T> = Result<T,(T,Error)>;
 
 impl CompileSteps {
     pub fn new() -> CompileSteps {
@@ -56,7 +56,7 @@ impl CompileSteps {
 }
 
 
-pub fn compile_shader(gl:&WebGlRenderingContext, vertex:&str, fragment:&str) -> Result<WebGlProgram, String> {
+pub fn compile_shader(gl:&WebGlRenderingContext, vertex:&str, fragment:&str) -> Result<WebGlProgram, Error> {
     let result = create_program(&gl, CompileSteps::new())
         .and_then(|compile_steps:CompileSteps|
             compile_source(&gl, compile_steps, fragment, WebGlRenderingContext::FRAGMENT_SHADER)
@@ -75,7 +75,7 @@ pub fn compile_shader(gl:&WebGlRenderingContext, vertex:&str, fragment:&str) -> 
         }
         Err((mut compile_steps, error_message)) => {
             compile_steps.free_all(gl);
-            Err(error_message)
+            Err(Error::from(error_message))
         }
     }
 
@@ -88,7 +88,7 @@ fn create_program (gl:&WebGlRenderingContext, mut compile_steps:CompileSteps) ->
             Ok(compile_steps)
         }
         None => {
-            Err((compile_steps, String::from("Couldn't create program (unknown error")))
+            Err((compile_steps, Error::from("Couldn't create program (unknown error")))
         }
     }
 }
@@ -102,7 +102,7 @@ fn compile_source (gl:&WebGlRenderingContext, mut compile_steps:CompileSteps, so
             gl.compile_shader(&shader);
             match do_with_check( || gl.get_shader_parameter(&shader, WebGlRenderingContext::COMPILE_STATUS), || gl.get_shader_info_log(&shader)) {
                 Some(error_message) => {
-                    Err((compile_steps, error_message))
+                    Err((compile_steps, Error::from(error_message)))
                 }
                 None => {
                     gl.attach_shader(&compile_steps.program.as_ref().unwrap(), &shader);
@@ -117,18 +117,18 @@ fn compile_source (gl:&WebGlRenderingContext, mut compile_steps:CompileSteps, so
 
         }
         None => {
-            Err((compile_steps, String::from("bad shader (unknown error")))
+            Err((compile_steps, Error::from("bad shader (unknown error")))
         }
     }
 }
 
-fn link_program (gl:&WebGlRenderingContext, mut compile_steps:CompileSteps) -> WithError<CompileSteps> { 
+fn link_program (gl:&WebGlRenderingContext, compile_steps:CompileSteps) -> WithError<CompileSteps> { 
     let program = &compile_steps.program.as_ref().unwrap();
     gl.link_program(program);
 
     match do_with_check( || gl.get_program_parameter(program, WebGlRenderingContext::LINK_STATUS), || gl.get_program_info_log(program)) {
         Some(error_message) => {
-            Err((compile_steps, error_message))
+            Err((compile_steps, Error::from(error_message)))
         }
         None => Ok(compile_steps)
     }
