@@ -11,5 +11,5 @@ npm run bundle
 cp -R dist ../../dist/integration-tests
 cd ../..
 
-# deploy all-inclusive site folder
-netlify deploy --prod --dir dist
+# manually deploy all-inclusive site folder
+# netlify deploy --prod --dir dist
