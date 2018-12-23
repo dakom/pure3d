@@ -1,8 +1,9 @@
-Rebuilding https://github.com/dakom/pure3d-typescript
+# [Live Demo](https://pure3d.netlify.com)
+----
+
+Project: rebuild https://github.com/dakom/pure3d-typescript
 
 This time in Rust!
-
-# [Live Demo](https://pure3d.netlify.com)
 
 Also, as a way to self-motivate getting over the learning curve (this is my first Rust project), I thought it might help to livestream the coding+learning sessions, and also archive them in a playlist for a look-back.
 
