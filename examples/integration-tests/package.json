@@ -14,7 +14,7 @@
     "_build:rust:prod": "cargo +nightly build --target wasm32-unknown-unknown --release && npm run _rust:bindgen:prod",
     "_build:rust:dev": "cargo +nightly build --target wasm32-unknown-unknown && npm run _rust:bindgen:dev",
     "_rust:bindgen:dev": "mkdir -p ./target && cp ../../target/wasm32-unknown-unknown/debug/integration_tests* ./target/ && wasm-bindgen ./target/integration_tests.wasm --out-dir ./target",
-    "_rust:bindgen:prod": "mkdir -p ./target && cp ../../target/wasm32-unknown-unknown/release/integration_tests* ./target/ && wasm-bindgen ./target/integration_tests.wasm --out-dir ./target"
+    "_rust:bindgen:prod": "mkdir -p ./target && cp ../../target/wasm32-unknown-unknown/release/integration_tests* ./target/ && wasm-bindgen ./target/integration_tests.wasm --out-dir ./target && wasm-opt -Os -o ./target/integration_tests_bg.wasm ./target/integration_tests_bg.wasm"
   },
   "author": "",
   "license": "MIT",

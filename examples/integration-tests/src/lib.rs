@@ -20,7 +20,7 @@ pub extern "C" fn load_assets(
     scene_name: &str, 
     on_load: js_sys::Function,
     on_error: js_sys::Function,
-) {
+) -> Result<(), JsValue> {
 
     let this = &JsValue::NULL;
   
@@ -58,16 +58,17 @@ pub extern "C" fn load_assets(
             Ok((gl, program))
         })
         .and_then(|(gl, program)| {
-            start_ticker(gl, program);
+            start_ticker(gl, program)?;
             on_load.call0(this).map_err(|err| Error::from(err))
         });
 
     match result {
         Err(err) => {
-            on_error.call1(this, &err.to_js()).unwrap();
+            on_error.call1(this, &err.to_js())?;
         }
-        _ => {}
-    };
+        _ => {} 
+    }
+    Ok(())
 }
 
 fn change_quad(gl:&WebGlRenderingContext, program:&WebGlProgram, pos:&Point, area:&Area, color:&Color) {
@@ -98,7 +99,7 @@ fn upload_data(gl:&WebGlRenderingContext, program:&WebGlProgram) -> Result<WebGl
         })
 }
 
-fn start_ticker (gl:WebGlRenderingContext, program:WebGlProgram) {
+fn start_ticker (gl:WebGlRenderingContext, program:WebGlProgram) -> Result<(), JsValue> {
 
     //just for fun!
     let pos = Point{x: 200.0, y: 200.0};
@@ -128,11 +129,14 @@ fn start_ticker (gl:WebGlRenderingContext, program:WebGlProgram) {
 
             change_quad(&gl, &program, &pos, &area, &color);
             gl.draw_arrays(WebGlRenderingContext::TRIANGLE_STRIP, 0, 4);
-            request_animation_frame(f.borrow().as_ref().unwrap());
+            request_animation_frame(f.borrow().as_ref().unwrap())
+                .ok()
+                .unwrap();
         }) as Box<FnMut()>));
     }
 
-    request_animation_frame(g.borrow().as_ref().unwrap());
+    request_animation_frame(g.borrow().as_ref().unwrap())?;
+    Ok(())
 }
 
 
@@ -142,9 +146,8 @@ fn window() -> web_sys::Window {
     web_sys::window().expect("no global `window` exists")
 }
 
-fn request_animation_frame(f: &Closure<FnMut()>) {
+fn request_animation_frame(f: &Closure<FnMut()>) -> Result<(), JsValue> {
     window()
-        .request_animation_frame(f.as_ref().unchecked_ref())
-        .expect("should register `requestAnimationFrame` OK");
+        .request_animation_frame(f.as_ref().unchecked_ref()).and(Ok(()))
 }
 
