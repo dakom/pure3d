@@ -19,11 +19,10 @@ use crate::helpers::*;
 use crate::setup::*;
 
 #[wasm_bindgen]
-pub extern "C" fn load_assets(
+pub extern "C" fn run(
     canvas_element: web_sys::HtmlCanvasElement, 
     scene_name: &str, 
     on_load: js_sys::Function,
-    on_error: js_sys::Function,
 ) -> Result<(), JsValue> {
 
     let this = &JsValue::NULL;
@@ -31,7 +30,6 @@ pub extern "C" fn load_assets(
     start_ticker(renderer, Quad::new())?;
     on_load.call0(this)?;
 
-    //where did our error logging go?!
     Ok(())
 }
 
