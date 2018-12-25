@@ -1,3 +1,10 @@
+use web_sys::{WebGlRenderingContext, WebGlProgram};
+
+pub struct Renderer {
+    pub gl:WebGlRenderingContext,
+    pub program:WebGlProgram
+}
+
 #[derive(Copy,Clone)]
 pub struct Point {
     pub x:f64,
@@ -23,3 +30,5 @@ pub struct Area {
     pub width:f64,
     pub height:f64,
 }
+
+

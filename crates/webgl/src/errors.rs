@@ -31,6 +31,12 @@ impl NativeError {
     }
 }
 
+impl From<Error> for JsValue {
+    fn from(err: Error) -> Self {
+        err.to_js()
+    }
+}
+
 impl From<NativeError> for Error {
     fn from(err: NativeError) -> Self {
         Error::Native(err)

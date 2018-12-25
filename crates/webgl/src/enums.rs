@@ -23,6 +23,17 @@ pub enum BufferUsage {
     DynamicDraw = 0x88E8,
 }
 
+#[derive(Copy, Clone)]
+pub enum BeginMode {
+    Points = 0x0000,
+    Lines = 0x0001,
+    LineLoop = 0x0002,
+    LineStrip = 0x0003,
+    Triangles = 0x0004,
+    TriangleStrip = 0x0005,
+    TriangleFan = 0x0006,
+}
+
 /*
  * NOTE - all the below are copy/pasted from the WebIDL
  * If they're implemented above, they are DELETED below!!
@@ -45,14 +56,6 @@ pub enum BufferUsage {
     STENCIL_BUFFER_BIT             = 0x00000400;
     COLOR_BUFFER_BIT               = 0x00004000;
 
-    * BeginMode *
-    POINTS                         = 0x0000;
-    LINES                          = 0x0001;
-    LINE_LOOP                      = 0x0002;
-    LINE_STRIP                     = 0x0003;
-    TRIANGLES                      = 0x0004;
-    TRIANGLE_STRIP                 = 0x0005;
-    TRIANGLE_FAN                   = 0x0006;
 
     * AlphaFunction (not supported in ES20) *
     *      NEVER *
