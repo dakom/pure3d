@@ -27,7 +27,8 @@ pub extern "C" fn run(
 
     let this = &JsValue::NULL;
     let renderer = setup_renderer(canvas_element)?;
-    start_ticker(renderer, Quad::new())?;
+    let quad = Quad::new();
+    start_ticker(renderer, quad)?;
     on_load.call0(this)?;
 
     Ok(())
@@ -46,19 +47,7 @@ fn start_ticker (renderer:Renderer, mut quad:Quad) -> Result<(), JsValue> {
         *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
 
             //gl.clear(WebGlRenderingContext::COLOR_BUFFER_BIT);
-            quad.color.r += direction;
-            if(direction > 0.0) {
-                if(quad.color.r > 1.0) {
-                    direction *= -1.0;
-                    quad.color.r = 1.0;
-                }
-            } else {
-                if(quad.color.r < 0.0) {
-                    direction *= -1.0;
-                    quad.color.r = 0.0;
-                }
-            }
-
+            direction = quad.update(direction);
             quad.render(&renderer);
             request_animation_frame(f.borrow().as_ref().unwrap())
                 .ok()

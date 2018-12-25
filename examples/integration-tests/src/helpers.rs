@@ -12,16 +12,23 @@ pub struct Point {
 }
 
 #[derive(Copy,Clone)]
+#[repr(C)]
 pub struct Color {
-    pub r:f64,
-    pub g:f64,
-    pub b:f64,
-    pub a:f64,
+    pub r:f32,
+    pub g:f32,
+    pub b:f32,
+    pub a:f32,
 }
 
 impl Color {
-    pub fn as_slice(self:&Self) -> [f32;4] {
-        [self.r as f32, self.g as f32, self.b as f32, self.a as f32] 
+    pub fn as_slice(self:&Self) -> Vec<f32> {
+        vec![self.r, self.g, self.b, self.a]
+        //TODO: make this work! and return &mut [f32]
+        /*
+        let pointer = self as *const Color as *const f32;
+        let slice: &mut [f32] = unsafe { std::slice::from_raw_parts(pointer, 4) };
+        slice
+        */
     }
 }
 
