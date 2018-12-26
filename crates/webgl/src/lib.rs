@@ -5,3 +5,4 @@ pub mod errors;
 pub mod attributes;
 pub mod uniforms;
 pub mod enums;
+pub mod renderer;

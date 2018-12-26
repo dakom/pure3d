@@ -1,3 +1,6 @@
+mod quad;
+mod helpers;
+
 extern crate web_sys; 
 extern crate js_sys;
 extern crate wasm_bindgen;
@@ -10,13 +13,8 @@ use std::rc::Rc;
 use pure3d_webgl::*; 
 use pure3d_webgl::errors::*;
 use pure3d_webgl::enums::*;
-
-mod game_objects;
-mod helpers;
-mod setup;
-use crate::game_objects::*;
-use crate::helpers::*;
-use crate::setup::*;
+use pure3d_webgl::renderer::*; 
+use crate::quad::{Quad, QuadRenderer};
 
 #[wasm_bindgen]
 pub extern "C" fn run(
@@ -26,16 +24,16 @@ pub extern "C" fn run(
 ) -> Result<(), JsValue> {
 
     let this = &JsValue::NULL;
-    let renderer = setup_renderer(canvas_element)?;
+    let renderer = WebGlRenderer::new(&canvas_element)?;
     let quad = Quad::new();
-    start_ticker(renderer, quad)?;
+    let quad_renderer = QuadRenderer::new(renderer.clone())?;
+    start_ticker(quad, quad_renderer)?;
     on_load.call0(this)?;
 
     Ok(())
 }
 
-
-fn start_ticker (renderer:Renderer, mut quad:Quad) -> Result<(), JsValue> {
+fn start_ticker (mut quad:Quad, quad_renderer:QuadRenderer) -> Result<(), JsValue> {
     //just for fun!
     let mut direction = 0.01;
     //Kick off rAF loop
@@ -48,7 +46,7 @@ fn start_ticker (renderer:Renderer, mut quad:Quad) -> Result<(), JsValue> {
 
             //gl.clear(WebGlRenderingContext::COLOR_BUFFER_BIT);
             direction = quad.update(direction);
-            quad.render(&renderer);
+            quad_renderer.render(&mut quad);
             request_animation_frame(f.borrow().as_ref().unwrap())
                 .ok()
                 .unwrap();
