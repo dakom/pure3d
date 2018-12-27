@@ -5,45 +5,84 @@ use pure3d_webgl::renderer::WebGlRenderer;
 use pure3d_webgl::*;
 use web_sys::{WebGlRenderingContext, WebGlProgram, WebGlBuffer};
 
+use crate::rust::scenes::scene::{Scene};
+
+pub struct QuadScene {
+    _renderer:QuadRenderer,
+    _data:QuadData,
+}
+
+impl QuadScene {
+    pub fn new(renderer:&WebGlRenderer) -> Result<QuadScene, Error> {
+        let _renderer = QuadRenderer::new(renderer.clone())?;
+        let _data = QuadData::new();
+
+        Ok(QuadScene{_renderer, _data})
+    }
+}
+
+impl Scene for QuadScene {
+    fn render(self:&mut Self) {
+        self._renderer.render(&self._data);
+    }
+
+    fn update(self:&mut Self, time_stamp:f64) {
+        self._data.total_time = time_stamp;
+        let color = &mut self._data.color;
+        let direction = &mut (self._data.direction);
+        color.r += *direction;
+        if *direction > 0.0 {
+            if color.r > 1.0 {
+                color.r = 1.0;
+                *direction *= -1.0;
+            }
+        } else {
+            if color.r < 0.0 {
+                color.r = 0.0;
+                *direction *= -1.0;
+            }
+        }
+
+    }
+
+    fn should_stop(self:&mut Self) -> bool {
+        if self._data.total_time > 5000.0 {
+            true
+        } else {
+            false
+        }
+    }
+}
 /*
  * QuadRenderer is tied to the rAF cycle
  * Quad should conceptually be able to be sent across threads
  * The ratio is 1:many, i.e. one QuadRenderer which gets passed many quads
  */
-pub struct Quad {
+pub struct QuadData {
     pub pos: Point,
     pub area: Area,
     pub color: Color,
+    pub direction: f64,
+    pub total_time :f64
 }
 
-impl Quad {
-    pub fn new() -> Quad { 
+impl QuadData {
+    pub fn new() -> QuadData { 
         let pos = Point{x: 200.0, y: 200.0};
         let area = Area{width: 10.0, height: 100.0};
         let color = Color::new(1.0, 1.0, 0.0, 1.0);
-        Quad{pos, area, color}
+        QuadData{pos, area, color, direction: 0.05, total_time: 0.0}
     }
 
     pub fn update(self:&mut Self, direction:f64) -> f64 {
-        self.color.r += direction;
-        if direction > 0.0 {
-            if self.color.r > 1.0 {
-                self.color.r = 1.0;
-                return direction * -1.0;
-            }
-        } else {
-            if self.color.r < 0.0 {
-                self.color.r = 0.0;
-                return direction * -1.0;
-            }
-        }
         direction
     }
 }
 
 pub struct QuadRenderer {
     renderer:WebGlRenderer,
-    program: WebGlProgram
+    program: WebGlProgram,
+    vec4:[f32;4]
 }
 
 impl QuadRenderer {
@@ -52,13 +91,15 @@ impl QuadRenderer {
         let program = create_program(&gl)?;
         let buffer = upload_data_to_buffer(&gl)?;
         assign_buffer_to_attribute(&gl, &program, &buffer)?;
-        Ok(QuadRenderer{renderer, program})
+        Ok(QuadRenderer{renderer, program, vec4: [0.0;4]})
     }
-    pub fn render(self:&Self, quad:&mut Quad) {
+
+    pub fn render(self:&mut Self, data:&QuadData) {
         let gl = self.renderer.context();
         let loc = gl.get_uniform_location(&self.program, "u_color");
-
-        gl.uniform4fv_with_f32_array(loc.as_ref(), quad.color.values());
+        
+        write_vf64_vf32_4(data.color.values(), &mut self.vec4);
+        gl.uniform4fv_with_f32_array(loc.as_ref(), &mut self.vec4);
         gl.draw_arrays(BeginMode::TriangleStrip as u32, 0, 4);
     }
 }

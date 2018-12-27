@@ -62,7 +62,7 @@ export class Scene extends React.Component<Props, State> {
         loadWasm().then(wasmLib => 
             wasmLib.run(
                 this.canvasRef.current, 
-                this.props.scene, 
+                this.props.scene.toLowerCase(), 
                 () => {
                     this.setState({phase: PHASE.READY})
                 }
