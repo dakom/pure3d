@@ -4,7 +4,7 @@ extern crate web_sys;
 extern crate js_sys;
 extern crate wasm_bindgen;
 
-use crate::rust::scenes::basic::quad::*;
+use crate::rust::scenes::basic::quad::quad_scene::*;
 use crate::rust::scenes::scene::Scene;
 
 use wasm_bindgen::JsCast;
@@ -26,7 +26,7 @@ pub extern "C" fn run(
    
     let scene = {
         match scene_name {
-            "quad" => quad::QuadScene::new(&renderer),
+            "quad" => QuadScene::new(&renderer),
             _ => Err(Error::from("unknown scene!"))
         }
     }?;
