@@ -10,8 +10,8 @@ pub struct QuadData {
 
 impl QuadData {
     pub fn new() -> QuadData { 
-        let pos = Point{x: 200.0, y: 200.0};
-        let area = Area{width: 10.0, height: 100.0};
+        let pos = Point{x: 500.0, y: 500.0};
+        let area = Area{width: 300.0, height: 100.0};
         let color = Color::new(1.0, 1.0, 0.0, 1.0);
         QuadData{pos, area, color, direction: 0.05, current_time: 0.0}
     }
