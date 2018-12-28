@@ -19,13 +19,14 @@ pub struct QuadRenderer {
 }
 
 impl QuadRenderer {
-    pub fn new(renderer:&WebGlRenderer, window_size:&Area) -> Result<QuadRenderer, Error> {
+    pub fn new(renderer:&mut WebGlRenderer) -> Result<QuadRenderer, Error> {
+        let (window_width, window_height) = renderer.current_size();
         let gl = renderer.context();
         let program = create_program(&gl)?;
         let buffer = upload_data_to_buffer(&gl)?;
         assign_buffer_to_attribute(&gl, &program, &buffer)?;
         let mut camera_matrix:[f32;16] = [0.0;16];
-        write_ortho(0.0, window_size.width, 0.0, window_size.height, 0.0, 1.0, &mut camera_matrix);
+        write_ortho(0.0, window_width as f64, 0.0, window_height as f64, 0.0, 1.0, &mut camera_matrix);
         Ok(QuadRenderer{
             program, 
             vec4: [0.0;4], 

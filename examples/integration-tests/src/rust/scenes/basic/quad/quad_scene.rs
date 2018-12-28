@@ -11,8 +11,8 @@ pub struct QuadScene {
 }
 
 impl QuadScene {
-    pub fn new(renderer:&WebGlRenderer, window_size:&Area) -> Result<QuadScene, Error> {
-        let _renderer = QuadRenderer::new(&renderer, &window_size)?;
+    pub fn new(renderer:&mut WebGlRenderer) -> Result<QuadScene, Error> {
+        let _renderer = QuadRenderer::new(renderer)?;
         let _data = QuadData::new();
 
         Ok(QuadScene{_renderer, _data})

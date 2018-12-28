@@ -41,5 +41,9 @@ impl WebGlRenderer {
             self.last_height = height;
         }
     }
+
+    pub fn current_size(self:&Self) -> (u32, u32) {
+        (self.last_width, self.last_height)
+    }
 }
 
