@@ -8,7 +8,7 @@ pub enum Error {
 
 pub enum NativeError {
     CanvasCreate,
-    AttributeLocation
+    AttributeLocation,
 }
 
 impl Error {
@@ -26,7 +26,7 @@ impl NativeError {
     pub fn default_str (self:&Self) -> &'static str{
         match self {
             NativeError::CanvasCreate => "Couldn't create canvas!",
-            NativeError::AttributeLocation => "Couldn't get attribute location!"
+            NativeError::AttributeLocation => "Couldn't get attribute location!",
         }
     }
 }

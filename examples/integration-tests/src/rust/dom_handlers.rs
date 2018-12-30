@@ -10,13 +10,17 @@ use std::rc::Rc;
 use pure3d_webgl::renderer::*; 
 use pure3d_webgl::errors::*; 
 
-pub fn start_resize(renderer:Rc<RefCell<WebGlRenderer>>) -> Result<(), Error> {
+pub fn start_resize <T>(renderer:Rc<RefCell<WebGlRenderer>>, scene:Rc<RefCell<T>>) -> Result<(), Error> 
+    where T: Scene
+{
     let window = get_window()?;
     let window_size = get_window_size(&window)?;
 
     let mut renderer = renderer.borrow_mut();
     renderer.resize(window_size.width as u32, window_size.height as u32);
-
+    let mut scene = scene.borrow_mut();
+    scene.resize(window_size.width as u32, window_size.height as u32);
+    //console::log_1(&JsValue::from_str(format!("{} {}", renderer.current_size().0, renderer.current_size().1).as_str()));
     let cb = Closure::wrap(Box::new(move |width, height| {
         let s = format!("got resize! {} {}", width, height);
         console::log_1(&JsValue::from_str(s.as_str()));
@@ -27,9 +31,7 @@ pub fn start_resize(renderer:Rc<RefCell<WebGlRenderer>>) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn start_raf <T:'static + Scene>(mut scene:T, renderer:Rc<RefCell<WebGlRenderer>>) -> Result<(), JsValue> {
-
-
+pub fn start_ticker <T:'static + Scene>(scene:Rc<RefCell<T>>) -> Result<(), JsValue> {
     //Kick off rAF loop
     let f = Rc::new(RefCell::new(None));
     let g = f.clone();
@@ -37,13 +39,10 @@ pub fn start_raf <T:'static + Scene>(mut scene:T, renderer:Rc<RefCell<WebGlRende
     {
         //see: https://github.com/rustwasm/wasm-bindgen/blob/master/examples/request-animation-frame/src/lib.rs
         *g.borrow_mut() = Some(Closure::wrap(Box::new(move |time_stamp| {
+            let mut scene = scene.borrow_mut();
+            scene.tick(time_stamp);
 
-            let mut renderer = renderer.borrow_mut();
-
-            scene.update_data(time_stamp);
-            scene.update_renderer(&mut renderer);
-            scene.render(&renderer);
-
+            //console::log_1(&JsValue::from_str(format!("{}", time_stamp).as_str()));
             if scene.should_stop() {
                 f.borrow_mut().take();
             } else {

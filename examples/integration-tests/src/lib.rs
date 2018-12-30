@@ -4,6 +4,7 @@ extern crate web_sys;
 extern crate js_sys;
 extern crate wasm_bindgen;
 
+use crate::rust::scenes::scene::{Scene};
 use crate::rust::scenes::basic::quad::quad_scene::*;
 use crate::rust::dom_handlers::*;
 use wasm_bindgen::prelude::*;
@@ -22,18 +23,18 @@ pub extern "C" fn run(
     let renderer = WebGlRenderer::new(canvas)?;
     let renderer = Rc::new(RefCell::new(renderer));
 
-    start_resize(Rc::clone(&renderer))?;
-
     let scene = {
         match scene_name {
-            "quad" => QuadScene::new(&mut *renderer.borrow_mut()),
+            "quad" => QuadScene::new(Rc::clone(&renderer)),
             _ => Err(Error::from("unknown scene!"))
         }
     }?;
 
-    start_raf(scene, Rc::clone(&renderer))?;
+    let scene = Rc::new(RefCell::new(*scene));
+
+    start_resize(Rc::clone(&renderer), Rc::clone(&scene))?;
+    start_ticker(Rc::clone(&scene))?;
 
     on_load.call0(this)?;
-
     Ok(())
 }

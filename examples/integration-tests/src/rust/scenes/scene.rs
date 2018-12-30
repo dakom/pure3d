@@ -1,8 +1,11 @@
 use pure3d_webgl::renderer::WebGlRenderer;
-use pure3d_webgl::errors::Error;
+use pure3d_webgl::errors::*;
+use std::rc::Rc;
+use std::cell::RefCell;
+
 pub trait Scene {
-    fn render(&mut self, renderer:&WebGlRenderer);
-    fn update_data(&mut self, time_stamp:f64);
-    fn update_renderer(&mut self, renderer:&mut WebGlRenderer);
+    fn new(webgl_renderer:Rc<RefCell<WebGlRenderer>>) -> Result<Box<Self>, Error>;
+    fn tick(&mut self, time_stamp:f64) -> Result<(), Error>;
+    fn resize(&mut self, width: u32, height: u32) -> Result<(), Error>;
     fn should_stop(&mut self) -> bool;
 }

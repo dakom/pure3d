@@ -14,6 +14,11 @@ pub struct WebGlRenderer {
     last_height: u32
 }
 
+
+pub trait WebGlRender {
+    fn render(&self, webgl_renderer:&mut WebGlRenderer);
+}
+
 impl WebGlRenderer {
     pub fn new(canvas: HtmlCanvasElement) -> Result<WebGlRenderer, Error> {
         get_canvas_context_1(&canvas)
@@ -30,6 +35,9 @@ impl WebGlRenderer {
         &self.gl
     }
 
+    pub fn context_mut(self:&mut Self) -> &mut WebGlRenderingContext {
+        &mut self.gl
+    }
     pub fn resize(self:&mut Self, width:u32, height:u32) {
         if self.last_width != width || self.last_height != height {
             let canvas = &mut self.canvas;
