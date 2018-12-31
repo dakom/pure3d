@@ -1,7 +1,7 @@
 use crate::rust::scenes::basic::quad::quad_scene::*;
 use crate::rust::scenes::scene::Scene;
 
-use web_sys::{console};
+//use web_sys::{console};
 use crate::rust::helpers::data::*;
 use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::*;
@@ -10,23 +10,36 @@ use std::rc::Rc;
 use pure3d_webgl::renderer::*; 
 use pure3d_webgl::errors::*; 
 
-pub fn start_resize <T>(renderer:Rc<RefCell<WebGlRenderer>>, scene:Rc<RefCell<T>>) -> Result<(), Error> 
-    where T: Scene
+pub fn start_resize <T: 'static + Scene>(renderer:Rc<RefCell<WebGlRenderer>>, scene:Rc<RefCell<T>>) -> Result<(), Error> 
 {
+
+    let cb = move || {
+        get_window()
+            .and_then(|window| {
+                get_window_size(&window)
+            })
+            .map(|window_size| {
+                let mut renderer = renderer.borrow_mut();
+                renderer.resize(window_size.width as u32, window_size.height as u32);
+
+                let mut scene = scene.borrow_mut();
+                scene.resize(window_size.width as u32, window_size.height as u32);
+            })
+            .map_err(|err| err.to_js())
+    };
+
+    //First we want to resize right away
+    cb();
+
+    //Then we need to box it up in a way that can be sent to JS handler
+    let cb = Closure::wrap(Box::new(cb) as Box<FnMut() -> Result<(), JsValue>>);
+
+    //And hook it up!
     let window = get_window()?;
-    let window_size = get_window_size(&window)?;
+    window.set_onresize(Some(cb.as_ref().unchecked_ref()));
 
-    let mut renderer = renderer.borrow_mut();
-    renderer.resize(window_size.width as u32, window_size.height as u32);
-    let mut scene = scene.borrow_mut();
-    scene.resize(window_size.width as u32, window_size.height as u32);
-    //console::log_1(&JsValue::from_str(format!("{} {}", renderer.current_size().0, renderer.current_size().1).as_str()));
-    let cb = Closure::wrap(Box::new(move |width, height| {
-        let s = format!("got resize! {} {}", width, height);
-        console::log_1(&JsValue::from_str(s.as_str()));
-    }) as Box<FnMut(u32, u32) -> ()>);
-
-    //window.set_onresize(Some(&js_sys::Function::from(cb)));
+    //Purposefully leak memory here so we retain the callback between JS's on_resize handler!
+    cb.forget();
 
     Ok(())
 }

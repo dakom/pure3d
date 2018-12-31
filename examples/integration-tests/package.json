@@ -5,6 +5,7 @@
   "scripts": {
     "clean": "rimraf ./dist && rimraf ./target",
     "bundle": "npm run _clean:dist && npm run _build:rust:prod && cross-env NODE_ENV=production webpack --progress --config webpack.prod.js && cp -R ./site/static ./dist/ && cp ./site/_redirects ./dist/",
+    "bundle:no-opt": "npm run _clean:dist && npm run _build:rust:prod-no-opt && cross-env NODE_ENV=production webpack --progress --config webpack.prod.js && cp -R ./site/static ./dist/ && cp ./site/_redirects ./dist/",
     "dev": "npm run _build:rust:dev && npm-run-all -p _dev:server _dev:webpack-server _dev:watch:rust",
     "_dev:server": "http-server ../assets",
     "_clean:dist": "rimraf ./dist",
@@ -12,9 +13,11 @@
     "_dev:webpack-server": "cross-env NODE_ENV=development webpack-dev-server --progress --open --config webpack.dev.js",
     "_dev:watch:rust": "chokidar \"../../**/*.rs\" \"../../**/*.glsl\" -c \"npm run _build:rust:dev\"",
     "_build:rust:prod": "cargo +nightly build --target wasm32-unknown-unknown --release && npm run _rust:bindgen:prod",
+    "_build:rust:prod-no-opt": "cargo +nightly build --target wasm32-unknown-unknown --release && npm run _rust:bindgen:prod-no-opt",
     "_build:rust:dev": "cargo +nightly build --target wasm32-unknown-unknown && npm run _rust:bindgen:dev",
     "_rust:bindgen:dev": "mkdir -p ./target && cp ../../target/wasm32-unknown-unknown/debug/integration_tests* ./target/ && wasm-bindgen ./target/integration_tests.wasm --out-dir ./target",
-    "_rust:bindgen:prod": "mkdir -p ./target && cp ../../target/wasm32-unknown-unknown/release/integration_tests* ./target/ && wasm-bindgen ./target/integration_tests.wasm --out-dir ./target && wasm-opt -Os -o ./target/integration_tests_bg.wasm ./target/integration_tests_bg.wasm"
+    "_rust:bindgen:prod": "mkdir -p ./target && cp ../../target/wasm32-unknown-unknown/release/integration_tests* ./target/ && wasm-bindgen ./target/integration_tests.wasm --out-dir ./target && wasm-opt -Os -o ./target/integration_tests_bg.wasm ./target/integration_tests_bg.wasm",
+    "_rust:bindgen:prod-no-opt": "mkdir -p ./target && cp ../../target/wasm32-unknown-unknown/release/integration_tests* ./target/ && wasm-bindgen ./target/integration_tests.wasm --out-dir ./target"
   },
   "author": "",
   "license": "MIT",
