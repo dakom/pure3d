@@ -1,5 +1,5 @@
 import {SCENE} from "types/Types";
 
 export const debugSettings = {
-    scene: SCENE.QUAD
+    scene: SCENE.TEXTURED_QUAD
 }

@@ -10,9 +10,7 @@ use std::rc::Rc;
 use pure3d_webgl::renderer::*; 
 use pure3d_webgl::errors::*; 
 
-pub fn start_resize <T: 'static + Scene>(renderer:Rc<RefCell<WebGlRenderer>>, scene:Rc<RefCell<T>>) -> Result<(), Error> 
-{
-
+pub fn start_resize <T: 'static + Scene + ?Sized>(renderer:Rc<RefCell<WebGlRenderer>>, scene:Rc<RefCell<Box<T>>>) -> Result<(), Error> {
     let cb = move || {
         get_window()
             .and_then(|window| {
@@ -44,7 +42,7 @@ pub fn start_resize <T: 'static + Scene>(renderer:Rc<RefCell<WebGlRenderer>>, sc
     Ok(())
 }
 
-pub fn start_ticker <T:'static + Scene>(scene:Rc<RefCell<T>>) -> Result<(), JsValue> {
+pub fn start_ticker <T:'static + Scene + ?Sized>(scene:Rc<RefCell<Box<T>>>) -> Result<(), JsValue> {
     //Kick off rAF loop
     let f = Rc::new(RefCell::new(None));
     let g = f.clone();

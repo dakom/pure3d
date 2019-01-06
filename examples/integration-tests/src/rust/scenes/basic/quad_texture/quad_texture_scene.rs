@@ -1,6 +1,6 @@
 use crate::rust::helpers::data::*;
 use crate::rust::helpers::matrix::*;
-use super::quad_data::*;
+use super::quad_texture_data::*;
 use crate::rust::scenes::scene::{Scene};
 use pure3d_webgl::enums::{BeginMode};
 use pure3d_webgl::renderer::*;
@@ -12,37 +12,36 @@ use web_sys::{console};
 use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::*;
 
-pub struct QuadScene {
+pub struct QuadTextureScene {
     webgl_renderer: Rc<RefCell<WebGlRenderer>>, 
     camera_matrix:[f32;16],
-    instance_data:QuadInstanceData,
-    render_data:QuadRenderData
+    instance_data:QuadTextureInstanceData,
+    render_data:QuadTextureRenderData
 }
 
-impl QuadScene {
-    pub fn new(webgl_renderer:Rc<RefCell<WebGlRenderer>>) -> Result<Box<QuadScene>, Error> {
+impl QuadTextureScene {
+    pub fn new(webgl_renderer:Rc<RefCell<WebGlRenderer>>) -> Result<Box<QuadTextureScene>, Error> {
 
-        let instance_data = QuadInstanceData::new();
+        let instance_data = QuadTextureInstanceData::new();
 
         let camera_matrix:[f32;16] = [0.0;16];
         //this must all be in its own scope since we can't take ownership of
         //webgl_renderer while the borrow is still active
         let render_data = {
             let mut webgl_renderer_ref = webgl_renderer.try_borrow_mut().map_err(|e| e.to_string())?;
-            QuadRenderData::new(&mut webgl_renderer_ref)?
+            QuadTextureRenderData::new(&mut webgl_renderer_ref)?
         };
 
-        Ok(Box::new(QuadScene{
+        Ok(Box::new(QuadTextureScene{
             webgl_renderer,
             camera_matrix,
             instance_data,
             render_data
         }))
     }
+
 }
-
-impl Scene for QuadScene {
-
+impl Scene for QuadTextureScene {
     fn tick(self:&mut Self, time_stamp:f64) -> Result<(), Error> {
         self.instance_data.update(time_stamp);
         self.render_data.update(&self.camera_matrix, &self.instance_data);
@@ -65,7 +64,7 @@ impl Scene for QuadScene {
 }
 
 
-impl WebGlRender for QuadScene {
+impl WebGlRender for QuadTextureScene {
     fn render(self: &Self, webgl_renderer:&mut WebGlRenderer) {
         let gl = webgl_renderer.context();
         let render_data = &self.render_data; 
