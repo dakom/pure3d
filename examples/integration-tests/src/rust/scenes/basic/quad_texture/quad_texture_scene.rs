@@ -22,7 +22,7 @@ pub struct QuadTextureScene {
 impl QuadTextureScene {
     pub fn new(webgl_renderer:Rc<RefCell<WebGlRenderer>>) -> Result<Box<QuadTextureScene>, Error> {
 
-        let instance_data = QuadTextureInstanceData::new();
+        let instance_data = QuadTextureInstanceData::new()?;
 
         let camera_matrix:[f32;16] = [0.0;16];
         //this must all be in its own scope since we can't take ownership of

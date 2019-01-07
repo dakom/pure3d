@@ -49,6 +49,12 @@ impl From<JsValue> for Error {
     }
 }
 
+impl From<js_sys::Error> for Error {
+    fn from(err: js_sys::Error) -> Self {
+        Error::Js(JsValue::from(err))
+    }
+}
+
 impl From<String> for Error {
     fn from(err: String) -> Self {
         Error::String(err)

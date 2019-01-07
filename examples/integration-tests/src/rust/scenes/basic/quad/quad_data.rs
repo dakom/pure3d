@@ -15,6 +15,7 @@ pub struct QuadInstanceData {
 
 impl QuadInstanceData {
     pub fn new() -> QuadInstanceData { 
+
         let pos = Point{x: 500.0, y: 500.0};
         let area = Area{width: 300.0, height: 100.0};
         let color = Color::new(1.0, 1.0, 0.0, 1.0);

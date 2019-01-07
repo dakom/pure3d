@@ -36,7 +36,7 @@ fn get_scene(scene_name:&str, webgl_renderer:Rc<RefCell<WebGlRenderer>>) -> Resu
     let scene = match scene_name {
         "quad" => QuadScene::new(webgl_renderer).map(|scene| scene as Box<dyn Scene>),
         "quad_texture" => QuadTextureScene::new(webgl_renderer).map(|scene| scene as Box<dyn Scene>),
-        _ => Err(Error::from("unknown scene!"))
+        _ => Err(Error::from(format!("unknown scene! {}", scene_name)))
     }?;
 
     Ok(Rc::new(RefCell::new(scene)))

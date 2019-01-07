@@ -1,5 +1,5 @@
 import * as React from "react";
-import {SCENE} from "types/Types";
+import {SCENE, sceneIdLookup} from "types/Types";
 import {LoaderView} from "view/Loader-View";
 import {ErrorView} from "view/Error-View";
 import {SceneView} from "view/Scene-View";
@@ -62,7 +62,7 @@ export class Scene extends React.Component<Props, State> {
         loadWasm().then(wasmLib => 
             wasmLib.run(
                 this.canvasRef.current, 
-                this.props.scene.toLowerCase(), 
+                sceneIdLookup.get(this.props.scene), 
                 () => {
                     this.setState({phase: PHASE.READY})
                 }

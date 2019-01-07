@@ -4,6 +4,7 @@ use pure3d_webgl::errors::*;
 use pure3d_webgl::enums::{BufferTarget, BufferUsage, DataType};
 use pure3d_webgl::renderer::WebGlRenderer;
 use pure3d_webgl::*;
+use web_sys_loaders::*;
 use web_sys::{WebGlRenderingContext, WebGlProgram, WebGlBuffer};
 
 pub struct QuadTextureInstanceData {
@@ -14,17 +15,20 @@ pub struct QuadTextureInstanceData {
 }
 
 impl QuadTextureInstanceData {
-    pub fn new() -> QuadTextureInstanceData { 
+    pub fn new() -> Result<QuadTextureInstanceData, Error> { 
+        xhr::fetch_image("http://localhost:7878/sprites/bunnies/rabbitv3_superman.png");
+        //xhr::quick_check()?;
+
         let pos = Point{x: 500.0, y: 500.0};
         let area = Area{width: 300.0, height: 100.0};
         let color = Color::new(1.0, 1.0, 0.0, 1.0);
 
-        QuadTextureInstanceData{
+        Ok(QuadTextureInstanceData{
                 pos, 
                 area, 
                 color, 
                 direction: 0.05, 
-        }
+        })
     }
 
     pub fn update(self:&mut Self, time_stamp:f64) {
