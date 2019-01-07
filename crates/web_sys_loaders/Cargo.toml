@@ -33,5 +33,6 @@ features = [
 'HtmlImageElement',
 'Url',
 'Window',
+'Location',
 'console'
 ]
