@@ -68,17 +68,8 @@ pub fn fetch_image(url:&str) -> Result<HtmlImageElement, JsValue> {
 
 pub fn same_origin(url:&str) -> Result<bool, JsValue> {
     //FOLLOWUP: https://github.com/rustwasm/wasm-bindgen/issues/1150
-    /*
     if url.starts_with("http://") || url.starts_with("https://") {
         let location_origin = get_window()?.location().origin()?; 
-        let url = Url::new(url)?;
-        Ok(url.origin() == location_origin)
-    } else {
-        Ok(true)
-    }
-    */
-    if url.starts_with("http://") || url.starts_with("https://") {
-        let location_origin = get_document()?.location().origin()?; 
         let url = Url::new(url)?;
         Ok(url.origin() == location_origin)
     } else {
@@ -94,19 +85,3 @@ fn get_document() -> Result<web_sys::Document, JsValue> {
 fn get_window () -> Result<web_sys::Window, JsValue> {
     web_sys::window().ok_or(JsValue::from_str("couldn't get window"))
 }
-/*
- * export const fetchImage = (url: string):Promise<HTMLImageElement> => new Promise((resolve, reject) => {
-    
-    const img = new Image();
-    
-    img.addEventListener("load", () => resolve(img));
-    
-    img.addEventListener("error", reject);
-
-    if(!sameOrigin(url)) {
-        img.crossOrigin = "anonymous";
-    }
-
-    img.src = url;
-});
-*/
