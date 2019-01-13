@@ -7,7 +7,7 @@ use pure3d_webgl::renderer::*;
 use pure3d_webgl::errors::*;
 use std::rc::Rc;
 use std::cell::RefCell;
-
+use futures::future::{Future, result};
 use web_sys::{console};
 use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::*;
@@ -20,24 +20,31 @@ pub struct QuadScene {
 }
 
 impl QuadScene {
-    pub fn new(webgl_renderer:Rc<RefCell<WebGlRenderer>>) -> Result<Box<QuadScene>, Error> {
+    pub fn new(webgl_renderer:Rc<RefCell<WebGlRenderer>>) -> impl Future<Item = Box<QuadScene>, Error = Error> {
 
         let instance_data = QuadInstanceData::new();
 
-        let camera_matrix:[f32;16] = [0.0;16];
         //this must all be in its own scope since we can't take ownership of
         //webgl_renderer while the borrow is still active
-        let render_data = {
-            let mut webgl_renderer_ref = webgl_renderer.try_borrow_mut().map_err(|e| e.to_string())?;
-            QuadRenderData::new(&mut webgl_renderer_ref)?
+        //
+        let render_data_result = {
+            webgl_renderer.try_borrow_mut()
+                .map_err(|s| Error::from(s.to_string()))
+                .and_then(|mut webgl_renderer_ref| {
+                    QuadRenderData::new(&mut webgl_renderer_ref)
+                })
         };
 
-        Ok(Box::new(QuadScene{
-            webgl_renderer,
-            camera_matrix,
-            instance_data,
-            render_data
-        }))
+
+        result(render_data_result)
+            .map(|render_data| {
+                Box::new(QuadScene{
+                    webgl_renderer,
+                    camera_matrix: [0.0;16],
+                    instance_data,
+                    render_data
+                })
+            })
     }
 }
 

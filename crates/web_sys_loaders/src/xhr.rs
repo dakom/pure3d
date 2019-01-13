@@ -29,7 +29,7 @@ pub fn quick_check() -> Result<(), js_sys::Error> {
 
     Ok(())
 }
-
+/*
 pub fn fetch_image(url:&str) -> Result<HtmlImageElement, JsValue> {
     let img = HtmlImageElement::new()?;
 
@@ -66,22 +66,4 @@ pub fn fetch_image(url:&str) -> Result<HtmlImageElement, JsValue> {
     Ok(img)
 }
 
-pub fn same_origin(url:&str) -> Result<bool, JsValue> {
-    //FOLLOWUP: https://github.com/rustwasm/wasm-bindgen/issues/1150
-    if url.starts_with("http://") || url.starts_with("https://") {
-        let location_origin = get_window()?.location().origin()?; 
-        let url_origin = Url::new(url)?.origin();
-        Ok(url_origin == location_origin)
-    } else {
-        Ok(true)
-    }
-}
-
-fn get_document() -> Result<web_sys::Document, JsValue> {
-    let window = get_window()?;
-    window.document().ok_or(JsValue::from_str("couldn't get document"))
-}
-
-fn get_window () -> Result<web_sys::Window, JsValue> {
-    web_sys::window().ok_or(JsValue::from_str("couldn't get window"))
-}
+*/

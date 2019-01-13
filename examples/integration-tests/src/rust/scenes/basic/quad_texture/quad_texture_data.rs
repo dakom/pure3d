@@ -5,7 +5,11 @@ use pure3d_webgl::enums::{BufferTarget, BufferUsage, DataType};
 use pure3d_webgl::renderer::WebGlRenderer;
 use pure3d_webgl::*;
 use web_sys_loaders::*;
+use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsCast;
 use web_sys::{WebGlRenderingContext, WebGlProgram, WebGlBuffer};
+use wasm_bindgen_futures::{future_to_promise, spawn_local, JsFuture};
+use futures::future::{Future};
 
 pub struct QuadTextureInstanceData {
     pub pos: Point,
@@ -15,20 +19,21 @@ pub struct QuadTextureInstanceData {
 }
 
 impl QuadTextureInstanceData {
-    pub fn new() -> Result<QuadTextureInstanceData, Error> { 
-        xhr::fetch_image("http://localhost:7878/sprites/bunnies/rabbitv3_superman.png");
-        //xhr::quick_check()?;
+    pub fn new() -> impl Future<Item = QuadTextureInstanceData, Error = Error> { 
+        image::fetch_image(String::from("http://localhost:7878/sprites/bunnies/rabbitv3_superman.png"))
+            .map_err(Error::from)
+            .map(|img| {
+                let pos = Point{x: 500.0, y: 500.0};
+                let area = Area{width: 300.0, height: 100.0};
+                let color = Color::new(1.0, 1.0, 0.0, 1.0);
 
-        let pos = Point{x: 500.0, y: 500.0};
-        let area = Area{width: 300.0, height: 100.0};
-        let color = Color::new(1.0, 1.0, 0.0, 1.0);
-
-        Ok(QuadTextureInstanceData{
-                pos, 
-                area, 
-                color, 
-                direction: 0.05, 
-        })
+                QuadTextureInstanceData{
+                        pos, 
+                        area, 
+                        color, 
+                        direction: 0.05, 
+                }
+            })
     }
 
     pub fn update(self:&mut Self, time_stamp:f64) {

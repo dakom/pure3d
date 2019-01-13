@@ -63,11 +63,13 @@ export class Scene extends React.Component<Props, State> {
             wasmLib.run(
                 this.canvasRef.current, 
                 sceneIdLookup.get(this.props.scene), 
-                () => {
-                    this.setState({phase: PHASE.READY})
-                }
             )
         )
+        .then(ret => {
+            this.setState({phase: PHASE.READY})
+            //console.log("from wasm:");
+            //console.log(ret);
+        })
         .catch(errorMessage => {
             console.error(errorMessage)
             this.setState({phase: PHASE.ERROR, errorMessage});

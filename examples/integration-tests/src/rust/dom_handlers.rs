@@ -42,7 +42,7 @@ pub fn start_resize <T: 'static + Scene + ?Sized>(renderer:Rc<RefCell<WebGlRende
     Ok(())
 }
 
-pub fn start_ticker <T:'static + Scene + ?Sized>(scene:Rc<RefCell<Box<T>>>) -> Result<(), JsValue> {
+pub fn start_ticker <T:'static + Scene + ?Sized>(scene:Rc<RefCell<Box<T>>>) -> Result<(), Error> {
     //Kick off rAF loop
     let f = Rc::new(RefCell::new(None));
     let g = f.clone();

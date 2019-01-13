@@ -7,7 +7,7 @@ use pure3d_webgl::renderer::*;
 use pure3d_webgl::errors::*;
 use std::rc::Rc;
 use std::cell::RefCell;
-
+use futures::future::{Future, result};
 use web_sys::{console};
 use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::*;
@@ -20,27 +20,32 @@ pub struct QuadTextureScene {
 }
 
 impl QuadTextureScene {
-    pub fn new(webgl_renderer:Rc<RefCell<WebGlRenderer>>) -> Result<Box<QuadTextureScene>, Error> {
+    pub fn new(webgl_renderer:Rc<RefCell<WebGlRenderer>>) -> impl Future<Item = Box<QuadTextureScene>, Error = Error> {
+        QuadTextureInstanceData::new()
+            .and_then(|instance_data| {
+                //this must all be in its own scope since we can't take ownership of
+                //webgl_renderer while the borrow is still active
+                let render_data_result = {
+                    webgl_renderer.try_borrow_mut()
+                        .map_err(|s| Error::from(s.to_string()))
+                        .and_then(|mut webgl_renderer_ref| {
+                            QuadTextureRenderData::new(&mut webgl_renderer_ref)
+                        })
+                };
 
-        let instance_data = QuadTextureInstanceData::new()?;
-
-        let camera_matrix:[f32;16] = [0.0;16];
-        //this must all be in its own scope since we can't take ownership of
-        //webgl_renderer while the borrow is still active
-        let render_data = {
-            let mut webgl_renderer_ref = webgl_renderer.try_borrow_mut().map_err(|e| e.to_string())?;
-            QuadTextureRenderData::new(&mut webgl_renderer_ref)?
-        };
-
-        Ok(Box::new(QuadTextureScene{
-            webgl_renderer,
-            camera_matrix,
-            instance_data,
-            render_data
-        }))
+                result(render_data_result)
+                    .map(|render_data| {
+                        Box::new(QuadTextureScene{
+                            webgl_renderer,
+                            camera_matrix: [0.0;16],
+                            instance_data,
+                            render_data
+                        })
+                    })
+            })
     }
-
 }
+
 impl Scene for QuadTextureScene {
     fn tick(self:&mut Self, time_stamp:f64) -> Result<(), Error> {
         self.instance_data.update(time_stamp);
