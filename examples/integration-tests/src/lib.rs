@@ -32,6 +32,7 @@ pub extern "C" fn run(
             .and_then(move |webgl_renderer| {
                 let webgl_renderer = Rc::new(RefCell::new(webgl_renderer));
                 get_scene(scene_name, Rc::clone(&webgl_renderer))
+                    .map(|scene| Rc::new(RefCell::new(scene)))
                     .and_then(move |scene| {
                         result(
                             start_ticker(Rc::clone(&scene))
@@ -46,30 +47,13 @@ pub extern "C" fn run(
     )
 }
 
-//TODO: related to the error above... dyn Scene + 'static feels odd... maybe there's a better
-//signature...
-fn get_scene(scene_name:String, webgl_renderer:Rc<RefCell<WebGlRenderer>>) -> impl Future<Item = Rc<RefCell<Box<dyn Scene + 'static>>>, Error = Error>{
-
+//should work... see: https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=adfb0e3366e47fa59a4942a48376f685
+fn get_scene(scene_name:String, webgl_renderer:Rc<RefCell<WebGlRenderer>>) -> Box<dyn Future<Item = Box<dyn Scene + 'static>, Error = Error>>{
     let scene_name = scene_name.as_str();
 
-    //Uncommenting either path (happy or sad) works - but when there's both, it's a compile error
-    let scene = match scene_name {
-        _ => QuadTextureScene::new(webgl_renderer).map(|scene| scene as Box<dyn Scene>),
-        //_ => QuadScene::new(webgl_renderer).map(|scene| Rc::new(RefCell::new(scene as Box<dyn Scene>))),
-        //"quad" => QuadScene::new(webgl_renderer).map(|scene| Rc::new(RefCell::new(scene as Box<dyn Scene>))),
-        //_ => result(Err(Error::from(format!("unknown scene! {}", scene_name))))
-    };
-    scene.map(|s| {
-        Rc::new(RefCell::new(s))
-    })
-   /* 
-    let scene = match scene_name {
-        "quad" => QuadScene::new(webgl_renderer).map(|scene| scene as Box<dyn Scene>),
-        _ => QuadScene::new(webgl_renderer).map(|scene| scene as Box<dyn Scene>)
-        //"quad" => QuadScene::new(webgl_renderer).map(|scene| scene as Box<dyn Scene>),
-        //"quad_texture" => QuadTextureScene::new(webgl_renderer).map(|scene| scene as Box<dyn Scene>),
-        //_ => result(Err(Error::from(format!("unknown scene! {}", scene_name))))
-    };
-
-    */
+    match(scene_name) {
+        "quad" => Box::new(QuadScene::new(webgl_renderer).map(|scene| scene as Box<Scene + 'static>)),
+        "quad_texture" => Box::new(QuadTextureScene::new(webgl_renderer).map(|scene| scene as Box<Scene + 'static>)),
+        _ => Box::new(futures::future::err(Error::from("unknown scene!")))
+    }
 }
