@@ -44,6 +44,8 @@ const loadWasm = (() => {
 export class Scene extends React.Component<Props, State> {
     private canvasRef = React.createRef<HTMLCanvasElement>();
 
+    private cleanup = () => {};
+
     readonly state:State = {
         phase: PHASE.LOADING
     }
@@ -58,17 +60,26 @@ export class Scene extends React.Component<Props, State> {
         }
     }
 
+    componentWillUnmount() {
+        this.cleanup();
+    }
+
     loadScene() {
+        this.cleanup();
+
         loadWasm().then(wasmLib => 
             wasmLib.run(
                 this.canvasRef.current, 
                 sceneIdLookup.get(this.props.scene), 
             )
         )
-        .then(ret => {
+        .then(wasm_cleanup => {
             this.setState({phase: PHASE.READY})
-            //console.log("from wasm:");
-            //console.log(ret);
+            this.cleanup = () => {
+                console.log("FREEEING!!!");
+                wasm_cleanup();
+                this.cleanup = () => {};
+            }
         })
         .catch(errorMessage => {
             console.error(errorMessage)

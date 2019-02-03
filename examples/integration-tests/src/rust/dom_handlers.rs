@@ -1,7 +1,7 @@
 use crate::rust::scenes::basic::quad::quad_scene::*;
 use crate::rust::scenes::scene::Scene;
 
-//use web_sys::{console};
+use web_sys::{console};
 use crate::rust::helpers::data::*;
 use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::*;
@@ -10,8 +10,14 @@ use std::rc::Rc;
 use pure3d_webgl::renderer::*; 
 use pure3d_webgl::errors::*; 
 
-pub fn start_resize <T: 'static + Scene + ?Sized>(renderer:Rc<RefCell<WebGlRenderer>>, scene:Rc<RefCell<Box<T>>>) -> Result<(), Error> {
+type ResizeCb = Box<FnMut() -> Result<(), JsValue>>;
+
+//Result<Closure<ResizeCb>, Error> {
+pub fn start_resize <T: 'static + Scene + ?Sized>(renderer:Rc<RefCell<WebGlRenderer>>, scene:Rc<RefCell<Box<T>>>) -> Result<Box<FnMut()>, Error> {
+
     let cb = move || {
+        console::log_1(&JsValue::from_str("RESIZING!!!"));
+
         get_window()
             .and_then(|window| {
                 get_window_size(&window)
@@ -30,19 +36,29 @@ pub fn start_resize <T: 'static + Scene + ?Sized>(renderer:Rc<RefCell<WebGlRende
     cb();
 
     //Then we need to box it up in a way that can be sent to JS handler
-    let cb = Closure::wrap(Box::new(cb) as Box<FnMut() -> Result<(), JsValue>>);
+    let js_cb = Closure::wrap(Box::new(cb) as ResizeCb); 
 
     //And hook it up!
     let window = get_window()?;
-    window.set_onresize(Some(cb.as_ref().unchecked_ref()));
+    window.set_onresize(Some(js_cb.as_ref().unchecked_ref()));
 
-    //Purposefully leak memory here so we retain the callback between JS's on_resize handler!
-    cb.forget();
+    //We want to hold onto the callback as long as
+    //the cleanup() function isn't called
+    let mut js_cb_holder = Box::new(Some(js_cb));
 
-    Ok(())
+    let cleanup = Box::new(move || {
+        //this will effectively drop js_cb
+        js_cb_holder.take();
+
+        window.set_onresize(None);
+        console::log_1(&JsValue::from_str("Cleaning up resizer..."));
+    });
+
+    Ok(cleanup)
 }
 
-pub fn start_ticker <T:'static + Scene + ?Sized>(scene:Rc<RefCell<Box<T>>>) -> Result<(), Error> {
+
+pub fn start_ticker <T:'static + Scene + ?Sized>(keep_alive: Rc<RefCell<bool>>, scene:Rc<RefCell<Box<T>>>) -> Result<(), Error> {
     //Kick off rAF loop
     let f = Rc::new(RefCell::new(None));
     let g = f.clone();
@@ -50,11 +66,15 @@ pub fn start_ticker <T:'static + Scene + ?Sized>(scene:Rc<RefCell<Box<T>>>) -> R
     {
         //see: https://github.com/rustwasm/wasm-bindgen/blob/master/examples/request-animation-frame/src/lib.rs
         *g.borrow_mut() = Some(Closure::wrap(Box::new(move |time_stamp| {
-            let mut scene = scene.borrow_mut();
-            scene.tick(time_stamp);
 
             //console::log_1(&JsValue::from_str(format!("{}", time_stamp).as_str()));
-            if scene.should_stop() {
+
+            let mut scene = scene.borrow_mut();
+            let keep_alive = *keep_alive.borrow();
+            scene.tick(time_stamp);
+            
+            if(!keep_alive) {
+                console::log_1(&JsValue::from_str("STOPPING TICK!!!"));
                 f.borrow_mut().take();
             } else {
                 request_animation_frame(f.borrow().as_ref().unwrap())

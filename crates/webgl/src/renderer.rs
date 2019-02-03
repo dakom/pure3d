@@ -2,6 +2,8 @@ extern crate web_sys;
 extern crate js_sys;
 extern crate wasm_bindgen;
 
+use wasm_bindgen::prelude::*;
+use web_sys::{console};
 use web_sys::{HtmlCanvasElement, WebGlProgram, WebGlRenderingContext};
 use super::enums::{DataType};
 use super::errors::*;
@@ -14,6 +16,12 @@ pub struct WebGlRenderer {
     last_height: u32
 }
 
+impl Drop for WebGlRenderer {
+    fn drop(self:&mut Self) {
+        self.gl.clear(WebGlRenderingContext::COLOR_BUFFER_BIT | WebGlRenderingContext::DEPTH_BUFFER_BIT); 
+        //console::log_1(&JsValue::from_str("Freed GL context!!!"));
+    }
+}
 
 pub trait WebGlRender {
     fn render(&self, webgl_renderer:&mut WebGlRenderer);

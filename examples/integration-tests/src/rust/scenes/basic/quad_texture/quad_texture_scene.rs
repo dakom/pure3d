@@ -16,7 +16,7 @@ pub struct QuadTextureScene {
     webgl_renderer: Rc<RefCell<WebGlRenderer>>, 
     camera_matrix:[f32;16],
     instance_data:QuadTextureInstanceData,
-    render_data:QuadTextureRenderData
+    render_data:QuadTextureRenderData,
 }
 
 impl QuadTextureScene {
@@ -39,7 +39,7 @@ impl QuadTextureScene {
                             webgl_renderer,
                             camera_matrix: [0.0;16],
                             instance_data,
-                            render_data
+                            render_data,
                         })
                     })
             })
@@ -47,6 +47,9 @@ impl QuadTextureScene {
 }
 
 impl Scene for QuadTextureScene {
+    fn id(self:&Self) -> &str {
+        "quad_texture"
+    }
     fn tick(self:&mut Self, time_stamp:f64) -> Result<(), Error> {
         self.instance_data.update(time_stamp);
         self.render_data.update(&self.camera_matrix, &self.instance_data);
@@ -63,9 +66,6 @@ impl Scene for QuadTextureScene {
         Ok(())
     }
 
-    fn should_stop(self:&mut Self) -> bool {
-        false
-    }
 }
 
 

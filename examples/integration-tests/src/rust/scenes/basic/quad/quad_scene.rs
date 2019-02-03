@@ -16,7 +16,7 @@ pub struct QuadScene {
     webgl_renderer: Rc<RefCell<WebGlRenderer>>, 
     camera_matrix:[f32;16],
     instance_data:QuadInstanceData,
-    render_data:QuadRenderData
+    render_data:QuadRenderData,
 }
 
 impl QuadScene {
@@ -42,13 +42,23 @@ impl QuadScene {
                     webgl_renderer,
                     camera_matrix: [0.0;16],
                     instance_data,
-                    render_data
+                    render_data,
                 })
             })
     }
 }
 
+impl Drop for QuadScene {
+    fn drop(self:&mut Self) {
+        console::log_1(&JsValue::from_str("DROPPED QUAD SCENE!"));
+    }
+}
+
 impl Scene for QuadScene {
+
+    fn id(self:&Self) -> &str {
+        "quad"
+    }
 
     fn tick(self:&mut Self, time_stamp:f64) -> Result<(), Error> {
         self.instance_data.update(time_stamp);
@@ -64,10 +74,6 @@ impl Scene for QuadScene {
         //Note - we could also get it from self.webgl_renderer.borrow_mut etc.
         write_ortho(0.0, window_width as f64, 0.0, window_height as f64, 0.0, 1.0, &mut self.camera_matrix);
         Ok(())
-    }
-
-    fn should_stop(self:&mut Self) -> bool {
-        false
     }
 }
 
