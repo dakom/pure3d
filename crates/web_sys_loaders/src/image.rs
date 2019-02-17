@@ -3,6 +3,8 @@ extern crate js_sys;
 extern crate wasm_bindgen;
 
 use futures::{Future, Async, Poll};
+use futures::sync::oneshot::{Sender, Receiver, channel};
+use futures::task::current;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::*;
@@ -11,57 +13,115 @@ use web_sys::*;
 struct Image {
     url: String,
     img: Option<HtmlImageElement>,
-    state: ImageState
+    state: ImageState,
+    closure_success:Option<Closure<FnMut()>>,
+    closure_err:Option<Closure<FnMut()>>,
+    error: Option<JsValue>
 }
 
 enum ImageState {
     Empty,
-    Loading,
-    Ready
+    Loading {
+        receiver_err: Receiver<JsValue>
+    },
+    Ready,
+    Error
 }
-
+//See: https://github.com/rustwasm/wasm-bindgen/issues/1126
+//
 impl Future for Image {
     type Item = HtmlImageElement;
     type Error = JsValue;
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        match &self.state {
+        match &mut self.state {
             ImageState::Empty => {
-                console::log_1(&JsValue::from_str("empty"));
-                /*
                 let img = HtmlImageElement::new()?;
                 let url = self.url.as_str();
                 let has_same_origin = same_origin(url)?;
+                let (sender_err, receiver_err):(Sender<JsValue>, Receiver<JsValue>) = channel();
 
                 if !has_same_origin {
                     img.set_cross_origin(Some(&"anonymous"));
                 }
 
                 img.set_src(url);
+                
+
+                //success callback
+                let task = current();
+                
+                let closure_success = Closure::wrap(Box::new(move || {
+                    task.notify();
+                }) as Box<FnMut()>);
+                
+                img.set_onload(Some(closure_success.as_ref().unchecked_ref()));
+                
+                self.closure_success = Some(closure_success);
+
+                //error callback
+                let task = current();
+                let cb = move || {
+                    //TODO - FIX ME!!!
+                    //sender_err.send(JsValue::from_str("unknown error!"));
+                    //task.notify();
+                };
+
+                let closure_err = Closure::wrap(Box::new(cb) as Box<FnMut()>);
+                
+                img.set_onerror(Some(closure_err.as_ref().unchecked_ref()));
+                
+                self.closure_err = Some(closure_err);
+
+                //Assign stuff to myself
                 self.img = Some(img);
-                */
-                self.state = ImageState::Loading;
+                self.state = ImageState::Loading {receiver_err};
+
+                //notify the task that we're now loading
+                let task = current();
+                task.notify();
+
                 Ok(Async::NotReady)
             },
-            ImageState::Loading => {
-                console::log_1(&JsValue::from_str("loading"));
-                self.state = ImageState::Ready;
+
+            ImageState::Loading {receiver_err} => {
+                let err = receiver_err.poll();
+                match(err) {
+                    Ok(value) => {
+                        self.state = ImageState::Error;
+                    },
+                    _ => {
+                        self.state = ImageState::Ready;
+                    }
+                }
+
                 Ok(Async::NotReady)
             },
+
             ImageState::Ready => {
-                console::log_1(&JsValue::from_str("ready"));
                 Ok(Async::Ready(self.img.as_ref().unwrap().clone()))
-            }
+            },
+
+            ImageState::Error => {
+                match &self.error {
+                    None => Err(JsValue::from_str("unknown error")),
+                    Some(err) => Err(err.clone())
+                }
+            },
         }
     }
 }
 
 impl Image {
-    fn new(url: String) -> Image {
-        Image {
+    fn new(url: String) -> Self {
+
+        Self {
             url,
             img: None,
-            state: ImageState::Empty
+            state: ImageState::Empty,
+            closure_success: None,
+            closure_err: None,
+            error: None,
         }
     }
 }

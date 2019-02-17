@@ -7,7 +7,7 @@ use pure3d_webgl::*;
 use web_sys_loaders::*;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use web_sys::{WebGlRenderingContext, WebGlProgram, WebGlBuffer};
+use web_sys::{WebGlRenderingContext, WebGlProgram, WebGlBuffer, HtmlImageElement, WebGlTexture};
 use wasm_bindgen_futures::{future_to_promise, spawn_local, JsFuture};
 use futures::future::{Future};
 
@@ -16,11 +16,12 @@ pub struct QuadTextureInstanceData {
     pub area: Area,
     pub color: Color,
     pub direction: f64,
+    pub img: HtmlImageElement,
 }
 
 impl QuadTextureInstanceData {
     pub fn new() -> impl Future<Item = QuadTextureInstanceData, Error = Error> { 
-        image::fetch_image(String::from("http://localhost:7878/sprites/bunnies/rabbitv3_superman.png"))
+        image::fetch_image(String::from("http://localhost:31337/sprites/bunnies/bunny.png"))
             .map_err(Error::from)
             .map(|img| {
                 let pos = Point{x: 500.0, y: 500.0};
@@ -32,6 +33,7 @@ impl QuadTextureInstanceData {
                         area, 
                         color, 
                         direction: 0.05, 
+                        img,
                 }
             })
     }
@@ -61,7 +63,7 @@ pub struct QuadTextureRenderData {
     pub mvp_matrix:[f32;16],
     pub color_vec:[f32;4], 
     pub program:WebGlProgram,
-    
+    pub texture:WebGlTexture 
 }
 
 impl QuadTextureRenderData {
@@ -69,14 +71,17 @@ impl QuadTextureRenderData {
         let gl = webgl_renderer.context_mut();
         let program = create_program(&gl)?;
         let buffer = upload_data_to_buffer(&gl)?;
+        let texture = gl.create_texture().unwrap();
         assign_buffer_to_attribute(&gl, &program, &buffer)?;
         Ok(QuadTextureRenderData{
             program,
             scale_matrix: [0.0;16], 
             mvp_matrix: [0.0;16], 
             color_vec: [0.0;4], 
+            texture
         })
     }
+
     pub fn update(self:&mut Self, camera_matrix:&[f32;16], instance_data:&QuadTextureInstanceData) {
         let mut scratch_matrix:[f32;16] = [0.0;16]; 
         let QuadTextureRenderData {scale_matrix, mvp_matrix, color_vec, ..} = self;

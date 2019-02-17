@@ -27,6 +27,7 @@ features = [
     'WebGl2RenderingContext',
     'WebGlProgram',
     'WebGlBuffer',
+    'WebGlTexture',
     'WebGlUniformLocation',
     'HtmlCanvasElement',
     'console',

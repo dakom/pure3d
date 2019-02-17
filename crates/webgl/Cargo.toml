@@ -33,5 +33,6 @@ features = [
   'HtmlCanvasElement',
   'WebGlProgram',
   'WebGlShader',
+  'WebGlTexture',
   'Window'
 ]

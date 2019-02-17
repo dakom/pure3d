@@ -34,6 +34,93 @@ pub enum BeginMode {
     TriangleFan = 0x0006,
 }
 
+#[derive(Copy, Clone)]
+pub enum TextureParameterName {
+    TextureMagFilter = 0x2800,
+    TextureMinFilter = 0x2801,
+    TextureWrapS                 = 0x2802,
+    TextureWrapT                 = 0x2803,
+}
+
+
+#[derive(Copy, Clone)]
+pub enum TextureMagFilter {
+    Nearest = 0x2600,
+    Linear = 0x2601,
+}
+
+#[derive(Copy, Clone)]
+pub enum TextureMinFilter {
+    Nearest = 0x2600,
+    Linear = 0x2601,
+    NearestMipMapNearest = 0x2700,
+    LinearMipMapNearest = 0x2701,
+    NearestMipMapLinear = 0x2702,
+    LinearMipMapLinear = 0x2703,
+}
+
+
+#[derive(Copy, Clone)]
+pub enum TextureTarget {
+    Texture2D                     = 0x0DE1,
+    Texture = 0x1702,
+
+    TextureCubeMap= 0x8513,
+    TextureBindingCubeMap= 0x8514,
+    TextureCubeMapPositiveX    = 0x8515,
+    TextureCubeMapNegativeX    = 0x8516,
+
+    TextureCubeMapPositiveY    = 0x8517,
+    TextureCubeMapNegativeY    = 0x8518,
+    TextureCubeMapPositiveZ    = 0x8519,
+    TextureCubeMapNegativeZ    = 0x851A,
+    MaxCubeTextureSize = 0x851C,
+}
+
+#[derive(Copy, Clone)]
+pub enum TextureUnit {
+    Texture0                       = 0x84C0,
+    Texture1                       = 0x84C1,
+    Texture2                       = 0x84C2,
+    Texture3                       = 0x84C3,
+    Texture4                       = 0x84C4,
+    Texture5                       = 0x84C5,
+    Texture6                       = 0x84C6,
+    Texture7                       = 0x84C7,
+    Texture8                       = 0x84C8,
+    Texture9                       = 0x84C9,
+    Texture10                      = 0x84CA,
+    Texture11                      = 0x84CB,
+    Texture12                      = 0x84CC,
+    Texture13                      = 0x84CD,
+    Texture14                      = 0x84CE,
+    Texture15                      = 0x84CF,
+    Texture16                      = 0x84D0,
+    Texture17                      = 0x84D1,
+    Texture18                      = 0x84D2,
+    Texture19                      = 0x84D3,
+    Texture20                      = 0x84D4,
+    Texture21                      = 0x84D5,
+    Texture22                      = 0x84D6,
+    Texture23                      = 0x84D7,
+    Texture24                      = 0x84D8,
+    Texture25                      = 0x84D9,
+    Texture26                      = 0x84DA,
+    Texture27                      = 0x84DB,
+    Texture28                      = 0x84DC,
+    Texture29                      = 0x84DD,
+    Texture30                      = 0x84DE,
+    Texture31                      = 0x84DF,
+    ActiveTexture                 = 0x84E0,
+}
+
+#[derive(Copy, Clone)]
+pub enum TextureWrapMode {
+    Repeat= 0x2901,
+    ClampToEdge= 0x812F,
+    MirroredRepeat= 0x8370,
+}
+
 /*
  * NOTE - all the below are copy/pasted from the WebIDL
  * If they're implemented above, they are DELETED below!!
@@ -273,78 +360,6 @@ ONE_MINUS_DST_ALPHA            = 0x0305;
     const GLenum VENDOR                         = 0x1F00;
     const GLenum RENDERER                       = 0x1F01;
     const GLenum VERSION                        = 0x1F02;
-
-    * TextureMagFilter *
-    const GLenum NEAREST                        = 0x2600;
-    const GLenum LINEAR                         = 0x2601;
-
-    * TextureMinFilter *
-    *      NEAREST *
-    *      LINEAR *
-    const GLenum NEAREST_MIPMAP_NEAREST         = 0x2700;
-    const GLenum LINEAR_MIPMAP_NEAREST          = 0x2701;
-    const GLenum NEAREST_MIPMAP_LINEAR          = 0x2702;
-    const GLenum LINEAR_MIPMAP_LINEAR           = 0x2703;
-
-    * TextureParameterName *
-    const GLenum TEXTURE_MAG_FILTER             = 0x2800;
-    const GLenum TEXTURE_MIN_FILTER             = 0x2801;
-    const GLenum TEXTURE_WRAP_S                 = 0x2802;
-    const GLenum TEXTURE_WRAP_T                 = 0x2803;
-
-    * TextureTarget *
-    const GLenum TEXTURE_2D                     = 0x0DE1;
-    const GLenum TEXTURE                        = 0x1702;
-
-    const GLenum TEXTURE_CUBE_MAP               = 0x8513;
-    const GLenum TEXTURE_BINDING_CUBE_MAP       = 0x8514;
-    const GLenum TEXTURE_CUBE_MAP_POSITIVE_X    = 0x8515;
-    const GLenum TEXTURE_CUBE_MAP_NEGATIVE_X    = 0x8516;
-    const GLenum TEXTURE_CUBE_MAP_POSITIVE_Y    = 0x8517;
-    const GLenum TEXTURE_CUBE_MAP_NEGATIVE_Y    = 0x8518;
-    const GLenum TEXTURE_CUBE_MAP_POSITIVE_Z    = 0x8519;
-    const GLenum TEXTURE_CUBE_MAP_NEGATIVE_Z    = 0x851A;
-    const GLenum MAX_CUBE_MAP_TEXTURE_SIZE      = 0x851C;
-
-    * TextureUnit *
-    const GLenum TEXTURE0                       = 0x84C0;
-    const GLenum TEXTURE1                       = 0x84C1;
-    const GLenum TEXTURE2                       = 0x84C2;
-    const GLenum TEXTURE3                       = 0x84C3;
-    const GLenum TEXTURE4                       = 0x84C4;
-    const GLenum TEXTURE5                       = 0x84C5;
-    const GLenum TEXTURE6                       = 0x84C6;
-    const GLenum TEXTURE7                       = 0x84C7;
-    const GLenum TEXTURE8                       = 0x84C8;
-    const GLenum TEXTURE9                       = 0x84C9;
-    const GLenum TEXTURE10                      = 0x84CA;
-    const GLenum TEXTURE11                      = 0x84CB;
-    const GLenum TEXTURE12                      = 0x84CC;
-    const GLenum TEXTURE13                      = 0x84CD;
-    const GLenum TEXTURE14                      = 0x84CE;
-    const GLenum TEXTURE15                      = 0x84CF;
-    const GLenum TEXTURE16                      = 0x84D0;
-    const GLenum TEXTURE17                      = 0x84D1;
-    const GLenum TEXTURE18                      = 0x84D2;
-    const GLenum TEXTURE19                      = 0x84D3;
-    const GLenum TEXTURE20                      = 0x84D4;
-    const GLenum TEXTURE21                      = 0x84D5;
-    const GLenum TEXTURE22                      = 0x84D6;
-    const GLenum TEXTURE23                      = 0x84D7;
-    const GLenum TEXTURE24                      = 0x84D8;
-    const GLenum TEXTURE25                      = 0x84D9;
-    const GLenum TEXTURE26                      = 0x84DA;
-    const GLenum TEXTURE27                      = 0x84DB;
-    const GLenum TEXTURE28                      = 0x84DC;
-    const GLenum TEXTURE29                      = 0x84DD;
-    const GLenum TEXTURE30                      = 0x84DE;
-    const GLenum TEXTURE31                      = 0x84DF;
-    const GLenum ACTIVE_TEXTURE                 = 0x84E0;
-
-    * TextureWrapMode *
-    const GLenum REPEAT                         = 0x2901;
-    const GLenum CLAMP_TO_EDGE                  = 0x812F;
-    const GLenum MIRRORED_REPEAT                = 0x8370;
 
     * Uniform Types *
     const GLenum FLOAT_VEC2                     = 0x8B50;
