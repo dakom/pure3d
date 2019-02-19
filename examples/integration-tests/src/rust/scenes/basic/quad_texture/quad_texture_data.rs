@@ -24,6 +24,7 @@ impl QuadTextureInstanceData {
         image::fetch_image(String::from("http://localhost:31337/sprites/bunnies/bunny.png"))
             .map_err(Error::from)
             .map(|img| {
+
                 let pos = Point{x: 500.0, y: 500.0};
                 let area = Area{width: 300.0, height: 100.0};
                 let color = Color::new(1.0, 1.0, 0.0, 1.0);

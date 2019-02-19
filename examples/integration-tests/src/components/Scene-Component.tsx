@@ -81,8 +81,12 @@ export class Scene extends React.Component<Props, State> {
                 this.cleanup = () => {};
             }
         })
-        .catch(errorMessage => {
-            console.error(errorMessage)
+        .catch(err => {
+            const errorMessage = err instanceof Error ? err.message
+                : err instanceof Event ? "error event (see console)"
+                : typeof err === "string" ? err
+                : "unknown error";
+            console.error(err);
             this.setState({phase: PHASE.ERROR, errorMessage});
         })
     }

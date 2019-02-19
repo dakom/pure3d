@@ -9,24 +9,21 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::*;
 
-
 struct Image {
     url: String,
     img: Option<HtmlImageElement>,
     state: ImageState,
-    closure_success:Option<Closure<FnMut()>>,
-    closure_err:Option<Closure<FnMut()>>,
-    error: Option<JsValue>
+    closureHolders:Option<(Closure<FnMut()>, Closure<FnMut(JsValue)>)>,
 }
 
 enum ImageState {
     Empty,
     Loading {
-        receiver_err: Receiver<JsValue>
+        receiver_err: Receiver<JsValue>,
+        receiver_success: Receiver<()>,
     },
-    Ready,
-    Error
 }
+
 //See: https://github.com/rustwasm/wasm-bindgen/issues/1126
 //
 impl Future for Image {
@@ -39,8 +36,6 @@ impl Future for Image {
                 let img = HtmlImageElement::new()?;
                 let url = self.url.as_str();
                 let has_same_origin = same_origin(url)?;
-                let (sender_err, receiver_err):(Sender<JsValue>, Receiver<JsValue>) = channel();
-
                 if !has_same_origin {
                     img.set_cross_origin(Some(&"anonymous"));
                 }
@@ -50,32 +45,33 @@ impl Future for Image {
 
                 //success callback
                 let task = current();
-                
+                let (sender_success, receiver_success):(Sender<()>, Receiver<()>) = channel();
+                let mut sender_success = Option::from(sender_success);
                 let closure_success = Closure::wrap(Box::new(move || {
+                    sender_success.take().unwrap().send(());
                     task.notify();
                 }) as Box<FnMut()>);
                 
                 img.set_onload(Some(closure_success.as_ref().unchecked_ref()));
                 
-                self.closure_success = Some(closure_success);
 
                 //error callback
+                let (sender_err, receiver_err):(Sender<JsValue>, Receiver<JsValue>) = channel();
+                let mut sender_err = Option::from(sender_err);
                 let task = current();
-                let cb = move || {
-                    //TODO - FIX ME!!!
-                    //sender_err.send(JsValue::from_str("unknown error!"));
-                    //task.notify();
-                };
-
-                let closure_err = Closure::wrap(Box::new(cb) as Box<FnMut()>);
+                let closure_err = Closure::wrap(Box::new(move |err| {
+                    sender_err.take().unwrap().send(err);
+                    task.notify();
+                }) as Box<FnMut(JsValue)>);
                 
+                //self.closure_err = Some(closure_err);
                 img.set_onerror(Some(closure_err.as_ref().unchecked_ref()));
                 
-                self.closure_err = Some(closure_err);
 
                 //Assign stuff to myself
                 self.img = Some(img);
-                self.state = ImageState::Loading {receiver_err};
+                self.state = ImageState::Loading {receiver_err, receiver_success};
+                self.closureHolders = Some((closure_success, closure_err));
 
                 //notify the task that we're now loading
                 let task = current();
@@ -84,29 +80,23 @@ impl Future for Image {
                 Ok(Async::NotReady)
             },
 
-            ImageState::Loading {receiver_err} => {
-                let err = receiver_err.poll();
-                match(err) {
-                    Ok(value) => {
-                        self.state = ImageState::Error;
-                    },
-                    _ => {
-                        self.state = ImageState::Ready;
-                    }
+            ImageState::Loading {receiver_err, receiver_success} => {
+                let mut ret = Ok(Async::NotReady);
+
+                if let Ok(value) = receiver_err.poll() {
+                    if let Async::Ready(err) = value {
+                        ret = Err(err);
+                    }                     
                 }
 
-                Ok(Async::NotReady)
-            },
-
-            ImageState::Ready => {
-                Ok(Async::Ready(self.img.as_ref().unwrap().clone()))
-            },
-
-            ImageState::Error => {
-                match &self.error {
-                    None => Err(JsValue::from_str("unknown error")),
-                    Some(err) => Err(err.clone())
+                if let Ok(value) = receiver_success.poll() {
+                    if let Async::Ready(_) = value {
+                        ret = Ok(Async::Ready(self.img.as_ref().unwrap().clone()));
+                    }                     
                 }
+                
+                ret
+
             },
         }
     }
@@ -119,9 +109,7 @@ impl Image {
             url,
             img: None,
             state: ImageState::Empty,
-            closure_success: None,
-            closure_err: None,
-            error: None,
+            closureHolders: None,
         }
     }
 }
