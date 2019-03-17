@@ -29,7 +29,7 @@ impl QuadTextureScene {
                     webgl_renderer.try_borrow_mut()
                         .map_err(|s| Error::from(s.to_string()))
                         .and_then(|mut webgl_renderer_ref| {
-                            QuadTextureRenderData::new(&mut webgl_renderer_ref)
+                            QuadTextureRenderData::new(&mut webgl_renderer_ref, &instance_data)
                         })
                 };
 

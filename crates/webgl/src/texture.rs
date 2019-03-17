@@ -2,21 +2,24 @@ extern crate web_sys;
 extern crate js_sys;
 extern crate wasm_bindgen;
 
-use web_sys::{WebGlRenderingContext, WebGlTexture};
+use web_sys::{WebGlRenderingContext, WebGlTexture, ImageBitmap, ImageData, HtmlImageElement, HtmlCanvasElement, HtmlVideoElement};
 use wasm_bindgen::prelude::JsValue;
+use wasm_bindgen::JsCast;
+use js_sys::{Object};
 use super::errors::*;
+use super::enums::{TextureWrapMode, TextureMinFilter, TextureMagFilter};
 
-enum WebGlTextureSource {
+pub enum WebGlTextureSource <'a> {
     ArrayBufferView(Object, i32, i32),
-    ByteArray(&mut [u8], i32, i32),
-    ImageBitmap(&ImageBitmap),
-    ImageData(&ImageData),
-    ImageElement(&HtmlImageElement),
-    CanvasElement(&HtmlCanvasElement),
-    VideoElement(&HtmlVideoElement),
+    ByteArray(&'a mut [u8], i32, i32),
+    ImageBitmap(&'a ImageBitmap),
+    ImageData(&'a ImageData),
+    ImageElement(&'a HtmlImageElement),
+    CanvasElement(&'a HtmlCanvasElement),
+    VideoElement(&'a HtmlVideoElement),
 }
 
-struct SimpleTextureOptions {
+pub struct SimpleTextureOptions {
     useMips: bool,
     flipY: bool,
     wrapS: TextureWrapMode,
@@ -27,20 +30,30 @@ struct SimpleTextureOptions {
 
 impl Default for SimpleTextureOptions {
     fn default() -> Self {
-        useMips: true,
-        flipY: true,
-        wrapS: TextureWrapMode::ClampToEdge,
-        wrapT: TextureWrapMode::ClampToEdge,
-        filterMin: TextureMinFilter::Linear,
-        filterMag: TextureMagFilter::Linear,
+        Self {
+            useMips: true,
+            flipY: true,
+            wrapS: TextureWrapMode::ClampToEdge,
+            wrapT: TextureWrapMode::ClampToEdge,
+            filterMin: TextureMinFilter::Linear,
+            filterMag: TextureMagFilter::Linear,
+        }
     }
 }
 
-pub fn create_simple_texture (gl:&WebGlRenderingContext, opts:&SimpleTextureOptions, src:&WebGlTextureSource) -> Result<WebGlTexture, Error> {
-    create_texture(&gl, &get_texture_options(&opts), &src)
+pub struct TextureOptions {
+}
+
+pub fn assign_simple_texture <'a> (gl:&WebGlRenderingContext, opts:&SimpleTextureOptions, src:&WebGlTextureSource, dest:&'a WebGlTexture) -> Result<&'a WebGlTexture, Error> {
+    assign_texture(&gl, &get_texture_options(&opts), &src, &dest)
 }
 
 
-pub fn create_texture (gl:&WebGlRenderingContext, opts:&TextureOptions, src:&WebGlTextureSource) -> Result<WebGlTexture, Error> {
+pub fn assign_texture <'a>(gl:&WebGlRenderingContext, opts:&TextureOptions, src:&WebGlTextureSource, dest:&'a WebGlTexture) -> Result<&'a WebGlTexture, Error> {
+    //TOIDO - build this!
+    Ok(dest)
+}
 
+fn get_texture_options(opts:&SimpleTextureOptions) -> TextureOptions {
+    TextureOptions{}
 }

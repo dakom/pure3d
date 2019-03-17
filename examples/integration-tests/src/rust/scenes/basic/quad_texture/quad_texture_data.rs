@@ -3,6 +3,7 @@ use crate::rust::helpers::matrix::*;
 use pure3d_webgl::errors::*;
 use pure3d_webgl::enums::{BufferTarget, BufferUsage, DataType};
 use pure3d_webgl::renderer::WebGlRenderer;
+use pure3d_webgl::texture::{assign_simple_texture, SimpleTextureOptions, WebGlTextureSource};
 use pure3d_webgl::*;
 use web_sys_loaders::*;
 use wasm_bindgen::prelude::*;
@@ -68,12 +69,14 @@ pub struct QuadTextureRenderData {
 }
 
 impl QuadTextureRenderData {
-    pub fn new(webgl_renderer:&mut WebGlRenderer) -> Result<QuadTextureRenderData, Error> {
+    pub fn new(webgl_renderer:&mut WebGlRenderer, instance_data:&QuadTextureInstanceData) -> Result<QuadTextureRenderData, Error> {
         let gl = webgl_renderer.context_mut();
         let program = create_program(&gl)?;
         let buffer = upload_data_to_buffer(&gl)?;
         let texture = gl.create_texture().unwrap();
         assign_buffer_to_attribute(&gl, &program, &buffer)?;
+        assign_simple_texture(&gl, &SimpleTextureOptions::default(), &WebGlTextureSource::ImageElement(&instance_data.img), &texture);
+
         Ok(QuadTextureRenderData{
             program,
             scale_matrix: [0.0;16], 
