@@ -9,6 +9,7 @@ pub enum Error {
 pub enum NativeError {
     CanvasCreate,
     AttributeLocation,
+    MipsPowerOf2
 }
 
 impl Error {
@@ -27,6 +28,7 @@ impl NativeError {
         match self {
             NativeError::CanvasCreate => "Couldn't create canvas!",
             NativeError::AttributeLocation => "Couldn't get attribute location!",
+            NativeError::MipsPowerOf2 => "mipmapping requires that textures be power of 2!",
         }
     }
 }

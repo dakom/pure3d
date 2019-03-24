@@ -121,6 +121,26 @@ pub enum TextureWrapMode {
     MirroredRepeat= 0x8370,
 }
 
+#[derive(Copy, Clone)]
+pub enum PixelFormat {
+    DepthComponent = 0x1902,
+    Alpha = 0x1906,
+    Rgb = 0x1907,
+    Rgba = 0x1908,
+    Luminance = 0x1909,
+    LuminanceAlpha = 0x190A
+}
+
+
+#[derive(Copy, Clone)]
+pub enum WebGlSpecific {
+    UnpackFlipY = 0x9240, 
+    UnpackPremultiplyAlpha = 0x9241,
+    ContextLost = 0x9242,
+    UnpackColorspaceConversion= 0x9243,
+    BrowserDefault = 0x9244,
+}
+
 /*
  * NOTE - all the below are copy/pasted from the WebIDL
  * If they're implemented above, they are DELETED below!!
@@ -285,11 +305,6 @@ ONE_MINUS_DST_ALPHA            = 0x0305;
     const GLenum SAMPLE_COVERAGE_VALUE          = 0x80AA;
     const GLenum SAMPLE_COVERAGE_INVERT         = 0x80AB;
 
-    * GetTextureParameter *
-    *      TEXTURE_MAG_FILTER *
-    *      TEXTURE_MIN_FILTER *
-    *      TEXTURE_WRAP_S *
-    *      TEXTURE_WRAP_T *
 
     const GLenum COMPRESSED_TEXTURE_FORMATS     = 0x86A3;
 
@@ -302,13 +317,6 @@ ONE_MINUS_DST_ALPHA            = 0x0305;
     const GLenum GENERATE_MIPMAP_HINT            = 0x8192;
 
 
-    * PixelFormat *
-    const GLenum DEPTH_COMPONENT                = 0x1902;
-    const GLenum ALPHA                          = 0x1906;
-    const GLenum RGB                            = 0x1907;
-    const GLenum RGBA                           = 0x1908;
-    const GLenum LUMINANCE                      = 0x1909;
-    const GLenum LUMINANCE_ALPHA                = 0x190A;
 
     * PixelType *
     *      UNSIGNED_BYTE *
@@ -447,10 +455,4 @@ ONE_MINUS_DST_ALPHA            = 0x0305;
 
     const GLenum INVALID_FRAMEBUFFER_OPERATION  = 0x0506;
 
-    WebGL-specific enums
-    const GLenum UNPACK_FLIP_Y_WEBGL            = 0x9240;
-    const GLenum UNPACK_PREMULTIPLY_ALPHA_WEBGL = 0x9241;
-    const GLenum CONTEXT_LOST_WEBGL             = 0x9242;
-    const GLenum UNPACK_COLORSPACE_CONVERSION_WEBGL = 0x9243;
-    const GLenum BROWSER_DEFAULT_WEBGL          = 0x9244;
     */

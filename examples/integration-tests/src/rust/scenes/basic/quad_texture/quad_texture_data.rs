@@ -75,7 +75,7 @@ impl QuadTextureRenderData {
         let buffer = upload_data_to_buffer(&gl)?;
         let texture = gl.create_texture().unwrap();
         assign_buffer_to_attribute(&gl, &program, &buffer)?;
-        assign_simple_texture(&gl, &SimpleTextureOptions::default(), &WebGlTextureSource::ImageElement(&instance_data.img), &texture);
+        assign_simple_texture(&gl, &SimpleTextureOptions::default(), &WebGlTextureSource::ImageElement(&instance_data.img), &texture)?;
 
         Ok(QuadTextureRenderData{
             program,
