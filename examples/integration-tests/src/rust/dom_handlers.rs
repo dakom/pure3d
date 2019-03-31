@@ -63,20 +63,20 @@ pub fn start_ticker <T:'static + Scene + ?Sized>(keep_alive: Rc<RefCell<bool>>, 
     let f = Rc::new(RefCell::new(None));
     let g = f.clone();
 
+    let mut last_time = 0.0;
+
     {
         //see: https://github.com/rustwasm/wasm-bindgen/blob/master/examples/request-animation-frame/src/lib.rs
         *g.borrow_mut() = Some(Closure::wrap(Box::new(move |time_stamp| {
-
-            //console::log_1(&JsValue::from_str(format!("{}", time_stamp).as_str()));
-
-            let mut scene = scene.borrow_mut();
-            let keep_alive = *keep_alive.borrow();
-            scene.tick(time_stamp);
             
-            if(!keep_alive) {
+            if(!*keep_alive.borrow()) {
                 console::log_1(&JsValue::from_str("STOPPING TICK!!!"));
                 f.borrow_mut().take();
             } else {
+                //console::log_1(&JsValue::from_str(format!("{}", time_stamp - last_time).as_str()));
+                let mut scene = scene.borrow_mut();
+                scene.tick(time_stamp, (time_stamp - last_time) / 1000.0);
+                last_time = time_stamp;
                 request_animation_frame(f.borrow().as_ref().unwrap())
                     .ok()
                     .unwrap();

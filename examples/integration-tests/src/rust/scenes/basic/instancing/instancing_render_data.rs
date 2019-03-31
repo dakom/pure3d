@@ -11,65 +11,17 @@ use wasm_bindgen::JsCast;
 use web_sys::{WebGlRenderingContext, WebGlProgram, WebGlBuffer, HtmlImageElement, WebGlTexture};
 use wasm_bindgen_futures::{future_to_promise, spawn_local, JsFuture};
 use futures::future::{Future};
+use super::instancing_data::*;
 
-pub struct QuadTextureInstanceData {
-    pub pos: Point,
-    pub area: Area,
-    pub color: Color,
-    pub direction: f64,
-    pub img: HtmlImageElement,
-}
-
-impl QuadTextureInstanceData {
-    pub fn new() -> impl Future<Item = QuadTextureInstanceData, Error = Error> { 
-        image::fetch_image(String::from("http://localhost:31337/sprites/bunnies/bunny.png"))
-            .map_err(Error::from)
-            .map(|img| {
-
-                let pos = Point{x: 500.0, y: 500.0};
-                let area = Area{width: 25.0, height: 32.0};
-                let color = Color::new(1.0, 1.0, 0.0, 1.0);
-
-                QuadTextureInstanceData{
-                        pos, 
-                        area, 
-                        color, 
-                        direction: 0.05, 
-                        img,
-                }
-            })
-    }
-
-    pub fn update(self:&mut Self, time_stamp:f64) {
-        let color = &mut self.color;
-        let direction = &mut (self.direction);
-        color.r += *direction;
-        if *direction > 0.0 {
-            if color.r > 1.0 {
-                color.r = 1.0;
-                *direction *= -1.0;
-            }
-        } else {
-            if color.r < 0.0 {
-                color.r = 0.0;
-                *direction *= -1.0;
-            }
-        }
-
-    }
-
-}
-
-pub struct QuadTextureRenderData {
+pub struct InstancingRenderData {
     pub scale_matrix:[f32;16],
     pub mvp_matrix:[f32;16],
-    pub color_vec:[f32;4], 
     pub program:WebGlProgram,
     pub texture:WebGlTexture 
 }
 
-impl QuadTextureRenderData {
-    pub fn new(webgl_renderer:&mut WebGlRenderer, instance_data:&QuadTextureInstanceData) -> Result<QuadTextureRenderData, Error> {
+impl InstancingRenderData {
+    pub fn new(webgl_renderer:&mut WebGlRenderer, instance_data:&InstancingInstanceData) -> Result<InstancingRenderData, Error> {
         let gl = webgl_renderer.context_mut();
         let program = create_program(&gl)?;
         let buffer = upload_data_to_buffer(&gl)?;
@@ -84,30 +36,25 @@ impl QuadTextureRenderData {
                               &texture
         )?;
 
-        Ok(QuadTextureRenderData{
+        //scale is constant for all bunnies
+        let mut scale_matrix = [0.0;16];
+        write_scale_matrix(instance_data.area.width, instance_data.area.height, 1.0, &mut scale_matrix);
+
+        Ok(InstancingRenderData{
             program,
-            scale_matrix: [0.0;16], 
+            scale_matrix, 
             mvp_matrix: [0.0;16], 
-            color_vec: [0.0;4], 
             texture
         })
     }
 
-    pub fn update(self:&mut Self, camera_matrix:&[f32;16], instance_data:&QuadTextureInstanceData) {
+    pub fn update(self:&mut Self, camera_matrix:&[f32;16], area:&Area, pos:&Point) {
         let mut scratch_matrix:[f32;16] = [0.0;16]; 
-        let QuadTextureRenderData {scale_matrix, mvp_matrix, color_vec, ..} = self;
-        let QuadTextureInstanceData {pos, area, color, ..} = instance_data;
+        let InstancingRenderData {scale_matrix, mvp_matrix, ..} = self;
 
-        //scale
-        write_scale_matrix(area.width, area.height, 1.0, scale_matrix);
-       
         //model-view-projection
         write_position_matrix(pos.x, pos.y, 0.0, &mut scratch_matrix);
         write_multiply_matrix(camera_matrix, &scratch_matrix, mvp_matrix); 
-
-        //color
-        color.write_to_v32_4(color_vec);
-
 
     }
 }
@@ -117,8 +64,8 @@ impl QuadTextureRenderData {
  */
 fn create_program (gl:&WebGlRenderingContext) -> Result<WebGlProgram, Error> {
     shader::compile_shader(&gl, 
-        include_str!("shaders/Quad-Texture-Vertex.glsl"),
-        include_str!("shaders/Quad-Texture-Fragment.glsl")
+        include_str!("shaders/Instancing-Vertex.glsl"),
+        include_str!("shaders/Instancing-Fragment.glsl")
     )
 }
 

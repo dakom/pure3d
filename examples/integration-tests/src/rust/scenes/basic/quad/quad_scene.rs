@@ -60,7 +60,7 @@ impl Scene for QuadScene {
         "quad"
     }
 
-    fn tick(self:&mut Self, time_stamp:f64) -> Result<(), Error> {
+    fn tick(self:&mut Self, time_stamp:f64, delta_time:f64) -> Result<(), Error> {
         self.instance_data.update(time_stamp);
         self.render_data.update(&self.camera_matrix, &self.instance_data);
         

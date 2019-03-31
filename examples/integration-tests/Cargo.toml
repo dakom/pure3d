@@ -19,6 +19,9 @@ futures = "0.1.25"
 pure3d_webgl = { path = "../../crates/webgl" }
 web_sys_loaders = { path = "../../crates/web_sys_loaders" }
 
+[dependencies.rand]
+version = "0.6"
+features = ["wasm-bindgen"]
 
 [dependencies.web-sys]
 version = "0.3.17"

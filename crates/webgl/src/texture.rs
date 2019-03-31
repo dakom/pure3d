@@ -23,13 +23,13 @@ pub enum WebGlTextureSource <'a> {
 // in order to support any possible options without making the wrappers
 // too verbose, TextureOptions itself uses plain scalars
 pub struct SimpleTextureOptions {
-    flipY: bool,
-    wrapS: TextureWrapMode,
-    wrapT: TextureWrapMode,
-    filterMin: TextureMinFilter,
-    filterMag: TextureMagFilter,
-    pixelFormat: PixelFormat,
-    dataType: DataType,
+    pub flipY: bool,
+    pub wrapS: TextureWrapMode,
+    pub wrapT: TextureWrapMode,
+    pub filterMin: TextureMinFilter,
+    pub filterMag: TextureMagFilter,
+    pub pixelFormat: PixelFormat,
+    pub dataType: DataType,
 }
 
 impl Default for SimpleTextureOptions {

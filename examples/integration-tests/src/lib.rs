@@ -4,11 +4,13 @@ extern crate web_sys;
 extern crate js_sys;
 extern crate wasm_bindgen;
 extern crate wasm_bindgen_futures;
+extern crate rand;
 
 use web_sys::{console};
 use crate::rust::scenes::scene::{Scene};
 use crate::rust::scenes::basic::quad::quad_scene::*;
 use crate::rust::scenes::basic::quad_texture::quad_texture_scene::*;
+use crate::rust::scenes::basic::instancing::instancing_scene::*;
 use crate::rust::dom_handlers::*;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
@@ -75,6 +77,7 @@ fn get_scene(scene_name:&str, webgl_renderer:Rc<RefCell<WebGlRenderer>>) -> Box<
     match(scene_name) {
         "quad" => Box::new(QuadScene::new(webgl_renderer).map(|scene| scene as Box<Scene + 'static>)),
         "quad_texture" => Box::new(QuadTextureScene::new(webgl_renderer).map(|scene| scene as Box<Scene + 'static>)),
+        "instancing" => Box::new(InstancingScene::new(webgl_renderer).map(|scene| scene as Box<Scene + 'static>)),
         _ => Box::new(futures::future::err(Error::from("unknown scene!")))
     }
 }
