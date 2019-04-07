@@ -70,7 +70,7 @@ impl Scene for QuadTextureScene {
 
 
 impl WebGlRender for QuadTextureScene {
-    fn render(self: &Self, webgl_renderer:&mut WebGlRenderer) {
+    fn render(self: &Self, webgl_renderer:&mut WebGlRenderer) -> Result<(), Error> {
         let gl = webgl_renderer.context();
         let render_data = &self.render_data; 
 
@@ -98,5 +98,7 @@ impl WebGlRender for QuadTextureScene {
        
         //draw!
         gl.draw_arrays(BeginMode::TriangleStrip as u32, 0, 4);
+
+        Ok(())
     }
 }

@@ -75,9 +75,12 @@ impl Scene for InstancingScene {
 
 
 impl WebGlRender for InstancingScene {
-    fn render(self: &Self, webgl_renderer:&mut WebGlRenderer) {
+    fn render(self: &Self, webgl_renderer:&mut WebGlRenderer) -> Result<(), Error> {
+        let ext = webgl_renderer.get_extension("ANGLE_instanced_arrayszzz")?;
+
         let gl = webgl_renderer.context();
         let render_data = &self.render_data; 
+
 
         //only because the gl.uniform calls require passing a mutable matrix
         //see https://github.com/rustwasm/wasm-bindgen/issues/1131
@@ -98,5 +101,7 @@ impl WebGlRender for InstancingScene {
        
         //draw!
         gl.draw_arrays(BeginMode::TriangleStrip as u32, 0, 4);
+
+        Ok(())
     }
 }

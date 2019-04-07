@@ -24,7 +24,7 @@ impl Drop for WebGlRenderer {
 }
 
 pub trait WebGlRender {
-    fn render(&self, webgl_renderer:&mut WebGlRenderer);
+    fn render(&self, webgl_renderer:&mut WebGlRenderer) -> Result<(), Error>;
 }
 
 impl WebGlRenderer {
@@ -60,6 +60,13 @@ impl WebGlRenderer {
 
     pub fn current_size(self:&Self) -> (u32, u32) {
         (self.last_width, self.last_height)
+    }
+
+    pub fn get_extension(self:&mut Self, name:&str) -> Result<js_sys::Object, Error> {
+        match self.gl.get_extension(name) {
+            Ok(obj) => obj.ok_or(Error::from(NativeError::NoExtension)),
+            Err(err) => Err(Error::from(err))
+        }
     }
 }
 

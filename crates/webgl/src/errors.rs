@@ -1,4 +1,5 @@
 use wasm_bindgen::prelude::JsValue; 
+use std::fmt;
 
 pub enum Error {
     String(String),
@@ -9,7 +10,8 @@ pub enum Error {
 pub enum NativeError {
     CanvasCreate,
     AttributeLocation,
-    MipsPowerOf2
+    MipsPowerOf2,
+    NoExtension
 }
 
 impl Error {
@@ -22,13 +24,19 @@ impl Error {
     }
 }
 
+impl fmt::Debug for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.to_js().as_string().unwrap_or("unknown error".to_string()))
+    }
+}
 
 impl NativeError {
     pub fn default_str (self:&Self) -> &'static str{
         match self {
-            NativeError::CanvasCreate => "Couldn't create canvas!",
-            NativeError::AttributeLocation => "Couldn't get attribute location!",
-            NativeError::MipsPowerOf2 => "mipmapping requires that textures be power of 2!",
+            NativeError::CanvasCreate => "Couldn't create canvas",
+            NativeError::AttributeLocation => "Couldn't get attribute location",
+            NativeError::MipsPowerOf2 => "mipmapping requires that textures be power of 2",
+            NativeError::NoExtension => "extension not found",
         }
     }
 }

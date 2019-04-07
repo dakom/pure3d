@@ -79,7 +79,7 @@ impl Scene for QuadScene {
 
 
 impl WebGlRender for QuadScene {
-    fn render(self: &Self, webgl_renderer:&mut WebGlRenderer) {
+    fn render(self: &Self, webgl_renderer:&mut WebGlRenderer) -> Result<(), Error> {
         let gl = webgl_renderer.context();
         let render_data = &self.render_data; 
 
@@ -107,5 +107,7 @@ impl WebGlRender for QuadScene {
        
         //draw!
         gl.draw_arrays(BeginMode::TriangleStrip as u32, 0, 4);
+
+        Ok(())
     }
 }

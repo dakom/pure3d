@@ -75,7 +75,11 @@ pub fn start_ticker <T:'static + Scene + ?Sized>(keep_alive: Rc<RefCell<bool>>, 
             } else {
                 //console::log_1(&JsValue::from_str(format!("{}", time_stamp - last_time).as_str()));
                 let mut scene = scene.borrow_mut();
-                scene.tick(time_stamp, (time_stamp - last_time) / 1000.0);
+                scene.tick(time_stamp, (time_stamp - last_time) / 1000.0)
+                    .map_err(|err| {
+                        console::log_1(&err.into());
+                    });
+
                 last_time = time_stamp;
                 request_animation_frame(f.borrow().as_ref().unwrap())
                     .ok()

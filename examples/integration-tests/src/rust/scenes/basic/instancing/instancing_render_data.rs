@@ -17,7 +17,7 @@ pub struct InstancingRenderData {
     pub scale_matrix:[f32;16],
     pub mvp_matrix:[f32;16],
     pub program:WebGlProgram,
-    pub texture:WebGlTexture 
+    pub texture:WebGlTexture,
 }
 
 impl InstancingRenderData {
@@ -35,6 +35,9 @@ impl InstancingRenderData {
                               &WebGlTextureSource::ImageElement(&instance_data.img), 
                               &texture
         )?;
+
+        //instancing setup....
+        
 
         //scale is constant for all bunnies
         let mut scale_matrix = [0.0;16];
