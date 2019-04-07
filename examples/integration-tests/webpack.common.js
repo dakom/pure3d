@@ -35,10 +35,6 @@ const commonConfig = {
         extensions: [".tsx", ".ts", ".js", ".wasm"],
         alias: {
             "components": path.resolve(__dirname, "src/components/"),
-            "view": path.resolve(__dirname, "src/view/"),
-            "actions": path.resolve(__dirname, "src/actions/"),
-            "types": path.resolve(__dirname, "src/types/"),
-            "styles": path.resolve(__dirname, "src/styles/"),
             "config": path.resolve(__dirname, "src/config/")
         }
     },
@@ -46,7 +42,7 @@ const commonConfig = {
 
 const browserConfig = Object.assign({}, commonConfig, {
     entry: {
-        io: path.resolve('./src/Main.tsx'),
+        io: path.resolve('./src/Main.ts'),
     },
     output: {
         path: path.resolve(__dirname, "dist"),

@@ -1,5 +1,5 @@
 import * as React from "react";
-import "styles/scene.scss";
+import "./scene.scss";
 
 interface Props {
     canvasRef: React.RefObject<HTMLCanvasElement>;

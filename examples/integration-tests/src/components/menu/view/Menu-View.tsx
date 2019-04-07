@@ -1,6 +1,6 @@
 import * as React from "react";
-import "styles/menu.scss";
-import {SCENE} from "types/Types";
+import "./menu.scss";
+import {SCENE} from "components/scene/types/Scene-Types";
 
 interface Props {
     selected: SCENE;

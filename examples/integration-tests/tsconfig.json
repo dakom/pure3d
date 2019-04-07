@@ -9,10 +9,6 @@
                 "*"
               ],
             "components/*": ["src/components/*"],
-            "view/*": ["src/view/*"],
-            "actions/*": ["src/actions/*"],
-            "types/*": ["src/types/*"],
-            "styles/*": ["src/styles/*"],
             "config/*": ["src/config/*"]
         },
         "moduleResolution": "node",

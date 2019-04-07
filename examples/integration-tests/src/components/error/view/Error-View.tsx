@@ -1,6 +1,6 @@
 import * as React from "react";
-import {SCENE} from "types/Types";
-import "styles/errors.scss";
+import {SCENE} from "components/scene/types/Scene-Types";
+import "./errors.scss";
 
 interface Props {
     message: string;
