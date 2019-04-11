@@ -76,7 +76,7 @@ impl Scene for InstancingScene {
 
 impl WebGlRender for InstancingScene {
     fn render(self: &Self, webgl_renderer:&mut WebGlRenderer) -> Result<(), Error> {
-        let ext = webgl_renderer.get_extension("ANGLE_instanced_arrayszzz")?;
+        let ext = webgl_renderer.get_extension("ANGLE_instanced_arrays")?;
 
         let gl = webgl_renderer.context();
         let render_data = &self.render_data; 
@@ -98,7 +98,9 @@ impl WebGlRender for InstancingScene {
         temp_mut_matrix.copy_from_slice(&render_data.mvp_matrix);
         let loc = gl.get_uniform_location(&render_data.program, "u_modelViewProjection");
         gl.uniform_matrix4fv_with_f32_array(loc.as_ref(), false, &mut temp_mut_matrix);
-       
+      
+        //
+        ext.vertexAttribDivisorANGLE(loc, 1);
         //draw!
         gl.draw_arrays(BeginMode::TriangleStrip as u32, 0, 4);
 
