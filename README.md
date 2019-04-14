@@ -4,6 +4,8 @@ Pure3D is a WebGL/Wasm renderer, conceptually a rebuild of [the typescript versi
 
 This time in Rust!
 
+Basically just a project to teach myself WebGl and do fun high-performance gamedevy things on the web.
+
 ## Demo
 
 https://pure3d.netlify.com
