@@ -35,6 +35,7 @@ export const Scene = ({scene}:Props) => {
                 : err instanceof Event ? "error event (see console)"
                 : typeof err === "string" ? err
                 : "unknown error";
+
             console.error(err);
             setPhase(PHASE.ERROR);
             setError(errorMessage);

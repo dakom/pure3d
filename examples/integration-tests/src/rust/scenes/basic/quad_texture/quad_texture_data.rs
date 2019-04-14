@@ -144,7 +144,6 @@ fn assign_buffer_to_attribute(gl:&WebGlRenderingContext, program:&WebGlProgram, 
     buffer::bind_buffer(&gl, &BufferTarget::ArrayBuffer, &buffer); 
 
     attributes::get_attribute_location(&gl, &program, "a_vertex")
-        .ok_or(Error::from(NativeError::AttributeLocation))
         .map(|loc| {
             let opts = attributes::AttributeOptions::new(2, DataType::Float);
             attributes::activate_attribute(&gl, &loc, &opts);

@@ -7,3 +7,4 @@ pub mod uniforms;
 pub mod enums;
 pub mod renderer;
 pub mod texture;
+pub mod extensions;

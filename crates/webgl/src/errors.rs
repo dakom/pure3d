@@ -10,8 +10,10 @@ pub enum Error {
 pub enum NativeError {
     CanvasCreate,
     AttributeLocation,
+    UniformLocation,
     MipsPowerOf2,
-    NoExtension
+    NoExtension,
+    MissingShaderProgram
 }
 
 impl Error {
@@ -35,8 +37,10 @@ impl NativeError {
         match self {
             NativeError::CanvasCreate => "Couldn't create canvas",
             NativeError::AttributeLocation => "Couldn't get attribute location",
+            NativeError::UniformLocation => "Couldn't get uniform location",
             NativeError::MipsPowerOf2 => "mipmapping requires that textures be power of 2",
             NativeError::NoExtension => "extension not found",
+            NativeError::MissingShaderProgram => "No shader program activated",
         }
     }
 }

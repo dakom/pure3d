@@ -5,6 +5,8 @@ extern crate wasm_bindgen;
 use web_sys::{WebGlRenderingContext, WebGlProgram, WebGlShader};
 use wasm_bindgen::prelude::JsValue;
 use super::errors::*;
+use super::renderer::*; 
+use super::errors::*;
 /*
  * TODO
  * 1. Have cleanup_shaders() to detatch and delete shader
@@ -56,8 +58,8 @@ impl CompileSteps {
 }
 
 
-pub fn compile_shader(gl:&WebGlRenderingContext, vertex:&str, fragment:&str) -> Result<WebGlProgram, Error> {
-    let result = create_program(&gl, CompileSteps::new())
+pub fn compile_program(gl:&WebGlRenderingContext, vertex:&str, fragment:&str) -> Result<WebGlProgram, Error> {
+    let result = compile_program_steps(&gl, CompileSteps::new())
         .and_then(|compile_steps:CompileSteps|
             compile_source(&gl, compile_steps, fragment, WebGlRenderingContext::FRAGMENT_SHADER)
         )
@@ -81,7 +83,7 @@ pub fn compile_shader(gl:&WebGlRenderingContext, vertex:&str, fragment:&str) -> 
 
 }
 
-fn create_program (gl:&WebGlRenderingContext, mut compile_steps:CompileSteps) -> WithError<CompileSteps> { 
+fn compile_program_steps (gl:&WebGlRenderingContext, mut compile_steps:CompileSteps) -> WithError<CompileSteps> { 
     match gl.create_program() {
         Some(program) => {
             compile_steps.program = Some(program);

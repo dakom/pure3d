@@ -4,6 +4,7 @@ extern crate wasm_bindgen;
 
 use web_sys::{WebGlProgram, WebGlRenderingContext};
 use super::enums::{DataType};
+use super::errors::*;
 
 pub struct AttributeOptions {
     pub size: i32, 
@@ -33,14 +34,15 @@ impl AttributeOptions {
     }
 }
 
-pub fn get_attribute_location(gl:&WebGlRenderingContext, program:&WebGlProgram, name:&str) -> Option<u32> {
+pub fn get_attribute_location(gl:&WebGlRenderingContext, program:&WebGlProgram, name:&str) -> Result<u32, Error> {
     Some(gl.get_attrib_location(&program, &name))
         .filter(|x| *x != -1)
         .map(|x| x as u32)
+        .ok_or(Error::from(NativeError::AttributeLocation))
 }
 
-pub fn activate_attribute(gl:&WebGlRenderingContext, loc:&u32, opts:&AttributeOptions) {
-    gl.vertex_attrib_pointer_with_f64(*loc, opts.size, opts.data_type as u32, opts.normalized, opts.stride, opts.offset as f64);
-    gl.enable_vertex_attrib_array(*loc);
+pub fn activate_attribute(gl:&WebGlRenderingContext, loc:u32, opts:&AttributeOptions) {
+    gl.vertex_attrib_pointer_with_f64(loc, opts.size, opts.data_type as u32, opts.normalized, opts.stride, opts.offset as f64);
+    gl.enable_vertex_attrib_array(loc);
 }
 
