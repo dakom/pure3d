@@ -15,7 +15,7 @@
     "_dev:watch:rust": "chokidar \"../../**/*.rs\" \"../../**/*.glsl\" -c \"npm run _build:rust:dev\"",
     "_build:rust:prod": "cargo +nightly build --target wasm32-unknown-unknown --release && npm run _rust:bindgen:prod",
     "_build:rust:prod-no-opt": "cargo +nightly build --target wasm32-unknown-unknown --release && npm run _rust:bindgen:prod-no-opt",
-    "_build:rust:dev": "cargo +nightly build --target wasm32-unknown-unknown && npm run _rust:bindgen:dev",
+    "_build:rust:dev": "cross-env RUSTFLAGS=\"-A warnings\" cargo +nightly rustc --target wasm32-unknown-unknown && npm run _rust:bindgen:dev",
     "_rust:bindgen:dev": "make-dir ./target && cpy ../../target/wasm32-unknown-unknown/debug/integration_tests* ./target/ && wasm-bindgen ./target/integration_tests.wasm --out-dir ./target",
     "_rust:bindgen:prod": "make-dir ./target && cpy ../../target/wasm32-unknown-unknown/release/integration_tests* ./target/ && wasm-bindgen ./target/integration_tests.wasm --out-dir ./target && wasm-opt -Os -o ./target/integration_tests_bg.wasm ./target/integration_tests_bg.wasm",
     "_rust:bindgen:prod-no-opt": "make-dir ./target && cpy ../../target/wasm32-unknown-unknown/release/integration_tests* ./target/ && wasm-bindgen ./target/integration_tests.wasm --out-dir ./target"
