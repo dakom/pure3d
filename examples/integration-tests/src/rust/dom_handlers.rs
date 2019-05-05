@@ -13,7 +13,7 @@ use pure3d_webgl::errors::*;
 type ResizeCb = Box<FnMut() -> Result<(), JsValue>>;
 
 //Result<Closure<ResizeCb>, Error> {
-pub fn start_resize <T: 'static + Scene + ?Sized>(renderer:Rc<RefCell<WebGlRenderer>>, scene:Rc<RefCell<Box<T>>>) -> Result<Box<FnMut()>, Error> {
+pub fn start_resize <T: 'static + Scene + ?Sized>(renderer:Rc<RefCell<WebGlRenderer<'static>>>, scene:Rc<RefCell<Box<T>>>) -> Result<Box<FnMut()>, Error> {
 
     let cb = move || {
         console::log_1(&JsValue::from_str("RESIZING!!!"));

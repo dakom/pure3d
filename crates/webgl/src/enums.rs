@@ -1,4 +1,4 @@
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub enum DataType {
     Byte = 0x1400,
     UnsignedByte = 0x1401,
@@ -9,21 +9,21 @@ pub enum DataType {
     Float = 0x1406,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub enum BufferTarget {
     ArrayBuffer = 0x8892,
     ElementArrayBuffer = 0x8893,
 }
 
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub enum BufferUsage {
     StreamDraw = 0x88E0,
     StaticDraw = 0x88E4,
     DynamicDraw = 0x88E8,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub enum BeginMode {
     Points = 0x0000,
     Lines = 0x0001,
@@ -34,7 +34,7 @@ pub enum BeginMode {
     TriangleFan = 0x0006,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub enum TextureParameterName {
     TextureMagFilter = 0x2800,
     TextureMinFilter = 0x2801,
@@ -43,13 +43,13 @@ pub enum TextureParameterName {
 }
 
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub enum TextureMagFilter {
     Nearest = 0x2600,
     Linear = 0x2601,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub enum TextureMinFilter {
     Nearest = 0x2600,
     Linear = 0x2601,
@@ -60,7 +60,7 @@ pub enum TextureMinFilter {
 }
 
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub enum TextureTarget {
     Texture2D                     = 0x0DE1,
     Texture = 0x1702,
@@ -77,7 +77,7 @@ pub enum TextureTarget {
     MaxCubeTextureSize = 0x851C,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub enum TextureUnit {
     Texture0                       = 0x84C0,
     Texture1                       = 0x84C1,
@@ -114,14 +114,14 @@ pub enum TextureUnit {
     ActiveTexture                 = 0x84E0,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub enum TextureWrapMode {
     Repeat= 0x2901,
     ClampToEdge= 0x812F,
     MirroredRepeat= 0x8370,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub enum PixelFormat {
     DepthComponent = 0x1902,
     Alpha = 0x1906,
@@ -132,7 +132,7 @@ pub enum PixelFormat {
 }
 
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub enum WebGlSpecific {
     UnpackFlipY = 0x9240, 
     UnpackPremultiplyAlpha = 0x9241,

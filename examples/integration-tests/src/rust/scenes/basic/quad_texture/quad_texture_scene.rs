@@ -12,14 +12,14 @@ use web_sys::{console};
 use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::*;
 
-pub struct QuadTextureScene {
-    webgl_renderer: Rc<RefCell<WebGlRenderer>>, 
+pub struct QuadTextureScene <'a> {
+    webgl_renderer: Rc<RefCell<WebGlRenderer<'a>>>, 
     camera_matrix:[f32;16],
     instance_data:QuadTextureInstanceData,
     render_data:QuadTextureRenderData,
 }
 
-impl QuadTextureScene {
+impl <'a> QuadTextureScene <'a> {
     pub fn new(webgl_renderer:Rc<RefCell<WebGlRenderer>>) -> impl Future<Item = Box<QuadTextureScene>, Error = Error> {
         QuadTextureInstanceData::new()
             .and_then(|instance_data| {
@@ -46,7 +46,7 @@ impl QuadTextureScene {
     }
 }
 
-impl Scene for QuadTextureScene {
+impl <'a> Scene for QuadTextureScene <'a> {
     fn id(self:&Self) -> &str {
         "quad_texture"
     }
@@ -69,7 +69,7 @@ impl Scene for QuadTextureScene {
 }
 
 
-impl WebGlRender for QuadTextureScene {
+impl <'a> WebGlRender for QuadTextureScene <'a> {
     fn render(self: &Self, webgl_renderer:&mut WebGlRenderer) -> Result<(), Error> {
         let gl = webgl_renderer.context();
         let render_data = &self.render_data; 

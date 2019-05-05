@@ -72,7 +72,7 @@ pub extern "C" fn run(
 }
 
 //should work... see: https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=adfb0e3366e47fa59a4942a48376f685
-fn get_scene(scene_name:&str, webgl_renderer:Rc<RefCell<WebGlRenderer>>) -> Box<dyn Future<Item = Box<dyn Scene + 'static>, Error = Error>>{
+fn get_scene(scene_name:&str, webgl_renderer:Rc<RefCell<WebGlRenderer<'static>>>) -> Box<dyn Future<Item = Box<dyn Scene + 'static>, Error = Error>>{
 
     match(scene_name) {
         "quad" => Box::new(QuadScene::new(webgl_renderer).map(|scene| scene as Box<Scene + 'static>)),

@@ -13,7 +13,9 @@ pub enum NativeError {
     UniformLocation,
     MipsPowerOf2,
     NoExtension,
-    MissingShaderProgram
+    MissingShaderProgram,
+    NoCreateBuffer,
+    NoExistingBuffer,
 }
 
 impl Error {
@@ -40,6 +42,8 @@ impl NativeError {
             NativeError::UniformLocation => "Couldn't get uniform location",
             NativeError::MipsPowerOf2 => "mipmapping requires that textures be power of 2",
             NativeError::NoExtension => "extension not found",
+            NativeError::NoCreateBuffer => "couldn't create buffer",
+            NativeError::NoExistingBuffer => "no existing buffer",
             NativeError::MissingShaderProgram => "No shader program activated",
         }
     }

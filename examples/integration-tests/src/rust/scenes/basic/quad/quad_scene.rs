@@ -12,14 +12,14 @@ use web_sys::{console};
 use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::*;
 
-pub struct QuadScene {
-    webgl_renderer: Rc<RefCell<WebGlRenderer>>, 
+pub struct QuadScene <'a>{
+    webgl_renderer: Rc<RefCell<WebGlRenderer<'a>>>, 
     camera_matrix:[f32;16],
     instance_data:QuadInstanceData,
     render_data:QuadRenderData,
 }
 
-impl QuadScene {
+impl <'a> QuadScene <'a>{
     pub fn new(webgl_renderer:Rc<RefCell<WebGlRenderer>>) -> impl Future<Item = Box<QuadScene>, Error = Error> {
 
         let instance_data = QuadInstanceData::new();
@@ -48,13 +48,13 @@ impl QuadScene {
     }
 }
 
-impl Drop for QuadScene {
+impl <'a> Drop for QuadScene<'a> {
     fn drop(self:&mut Self) {
         console::log_1(&JsValue::from_str("DROPPED QUAD SCENE!"));
     }
 }
 
-impl Scene for QuadScene {
+impl <'a> Scene for QuadScene<'a> {
 
     fn id(self:&Self) -> &str {
         "quad"
@@ -78,7 +78,7 @@ impl Scene for QuadScene {
 }
 
 
-impl WebGlRender for QuadScene {
+impl <'a> WebGlRender for QuadScene<'a> {
     fn render(self: &Self, webgl_renderer:&mut WebGlRenderer) -> Result<(), Error> {
         let gl = webgl_renderer.context();
         let render_data = &self.render_data; 

@@ -3,15 +3,20 @@ extern crate js_sys;
 extern crate wasm_bindgen;
 
 use std::collections::HashMap;
+use std::collections::hash_map::OccupiedEntry;
+use std::collections::hash_map::VacantEntry;
+use std::collections::hash_map::Entry;
 use wasm_bindgen::prelude::*;
 use web_sys::{console};
-use web_sys::{HtmlCanvasElement, WebGlProgram, WebGlRenderingContext, WebGlUniformLocation};
-use super::enums::{DataType};
+use web_sys::{HtmlCanvasElement, WebGlProgram, WebGlBuffer, WebGlRenderingContext, WebGlUniformLocation};
+use super::enums::{DataType, BufferTarget, BufferUsage};
 use super::errors::*;
 use super::canvas;
 use super::extensions;
 use super::shader;
 use super::attributes;
+use super::buffers;
+use super::uniforms;
 use wasm_bindgen::JsCast;
 
 pub struct WebGlRenderer <'a> {
@@ -20,11 +25,13 @@ pub struct WebGlRenderer <'a> {
     last_width: u32,
     last_height: u32,
 
-    last_program_id: u64,
-    current_program_info: Option<&'a ProgramInfo<'a>>,
+    current_program_id: Option<u64>,
     program_info_lookup: HashMap<u64, ProgramInfo<'a>>,
-
+    current_buffer_id: Option<u64>,
+    current_buffer_target: Option<BufferTarget>,
+    buffer_lookup: HashMap<u64, WebGlBuffer>,
     extension_lookup: HashMap<&'a str, js_sys::Object>,
+    global_attribute_lookup: HashMap<&'a str, u32>,
 }
 
 struct ProgramInfo <'a> {
@@ -36,7 +43,7 @@ struct ProgramInfo <'a> {
 
 
 impl<'a> Drop for WebGlRenderer<'a> {
-    fn drop(self:&mut Self) {
+    fn drop(&mut self) {
         self.gl.clear(WebGlRenderingContext::COLOR_BUFFER_BIT | WebGlRenderingContext::DEPTH_BUFFER_BIT); 
         //console::log_1(&JsValue::from_str("Freed GL context!!!"));
     }
@@ -56,21 +63,25 @@ impl<'a> WebGlRenderer<'a> {
                 canvas,
                 last_width: 0,
                 last_height: 0,
-                last_program_id: 0,
-                current_program_info: None,
+                current_program_id: None,
+                current_buffer_id: None,
+                current_buffer_target: None,
                 program_info_lookup: HashMap::new(),
-                extension_lookup: HashMap::new()
+                buffer_lookup: HashMap::new(),
+                extension_lookup: HashMap::new(),
+                global_attribute_lookup: HashMap::new()
             })
     }
 
-    pub fn context(self:&Self) -> &WebGlRenderingContext {
+    pub fn context(&self) -> &WebGlRenderingContext {
         &self.gl
     }
 
-    pub fn context_mut(self:&mut Self) -> &mut WebGlRenderingContext {
+    pub fn context_mut(&mut self) -> &mut WebGlRenderingContext {
         &mut self.gl
     }
-    pub fn resize(self:&mut Self, width:u32, height:u32) {
+
+    pub fn resize(&mut self, width:u32, height:u32) {
         if self.last_width != width || self.last_height != height {
             let canvas = &mut self.canvas;
             let gl = &mut self.gl;
@@ -82,18 +93,16 @@ impl<'a> WebGlRenderer<'a> {
         }
     }
 
-    pub fn current_size(self:&Self) -> (u32, u32) {
+    pub fn current_size(&self) -> (u32, u32) {
         (self.last_width, self.last_height)
     }
 
-
     //SHADERS
 
-    pub fn compile_program(self:&'a mut Self, vertex:&str, fragment:&str) -> Result<u64, Error> {
+    pub fn compile_program(&mut self, vertex:&str, fragment:&str) -> Result<u64, Error> {
         let program = shader::compile_program(&self.gl, &vertex, &fragment)?;
 
-        self.last_program_id += 1;
-        let id = self.last_program_id; 
+        let id = self.program_info_lookup.keys().max().map_or(0, |x| x + 1);
 
         let program_info = ProgramInfo {
             id,
@@ -108,73 +117,84 @@ impl<'a> WebGlRenderer<'a> {
         Ok(id)
     }
 
-    fn get_current_program_info(self:&'a Self) -> Result<&'a ProgramInfo, Error> {
-        self.current_program_info
+    fn get_current_program_info(&self) -> Result<&'a ProgramInfo, Error> {
+        self.current_program_id
+            .and_then(|id| self.program_info_lookup.get(&id))
             .ok_or(Error::from(NativeError::MissingShaderProgram))
     }
 
-    pub fn activate_program(self:&'a mut Self, program_id: u64) -> Result<(), Error> {
 
-        let requires_setting = 
-            match self.current_program_info {
-                Some(info) => {
-                    info.id != program_id
-                },
-                None => true
-            };
-
-        if requires_setting {
-            let program_info = 
-                self.program_info_lookup
-                    .get(&program_id)
-                    .ok_or(Error::from(NativeError::MissingShaderProgram))?;
-
-            self.current_program_info = Some(program_info);
-
-            let program = self.current_program_info.map(|info| &info.program);
-
-            self.gl.use_program(program);
+    pub fn activate_program(&mut self, program_id: u64) -> Result<(), Error> {
+        if Some(program_id) != self.current_program_id {
+            self.current_program_id = Some(program_id);
+            self.get_current_program_info()
+                .map(|program_info| {
+                    self.gl.use_program(Some(&program_info.program));
+                })
+        } else {
+            Ok(())
         }
+    }
+
+    //BUFFERS
+    pub fn create_buffer(&mut self) -> Result<u64, Error> {
+
+        let buffer = self.gl.create_buffer()
+            .ok_or(Error::from(NativeError::NoCreateBuffer))?;
+
+        let id = self.buffer_lookup.keys().max().map_or(0, |x| x + 1);
+        
+        self.buffer_lookup.insert(id, buffer);
+
+        Ok(id)
+    }
+
+    pub fn activate_buffer(&mut self, id:u64, target: BufferTarget) -> Result<(), Error> {
+        let buffer = self.buffer_lookup.get(&id)
+            .ok_or(Error::from(NativeError::NoExistingBuffer))?;
+
+        if Some(id) != self.current_buffer_id || Some(target) != self.current_buffer_target {
+            buffers::bind_buffer(&self.gl, target, &buffer);
+            self.current_buffer_id = Some(id);
+            self.current_buffer_target = Some(target);
+        }
+
         Ok(())
     }
 
-    //ATTRIBUTES
-    pub fn get_attribute_location(self:&'a mut Self, name:&str) -> Result<u32, Error> {
+    pub fn upload_array_buffer(&mut self, id:u64, values:&[f32], target: BufferTarget, usage:BufferUsage) -> Result<(), Error> {
+        self.activate_buffer(id, target)?;
 
-
-        let program_info = self.get_current_program_info()?;
-
-        let (loc, requires_add) = match program_info.attribute_lookup.get(&name) {
-            Some(loc) => {
-                (*loc, false)
-            },
-
-            None => {
-                let gl = self.context();
-                let loc = attributes::get_attribute_location(&gl, &program_info.program, &name)?;
-                (loc, true)
-            }
-        };
-
-        if requires_add {
-            self.current_program_info
-                .ok_or(Error::from(NativeError::MissingShaderProgram))
-                .as_mut()
-                .map(|program_info| {
-                    program_info.attribute_lookup.insert(&name, loc);
-                });
-        }
-
-        Ok(loc)
+        buffers::upload_array_buffer(&self.gl, &values, target, usage, self.buffer_lookup.get(&id).unwrap())
     }
 
-    pub fn activate_attribute_loc(self:&Self, loc:u32, opts:&attributes::AttributeOptions) {
+    //ATTRIBUTES
+    pub fn get_attribute_location_from_current_program(&mut self, name:&'a str) -> Result<u32, Error> 
+    
+    {
+        let program_id = self.current_program_id.ok_or(Error::from(NativeError::MissingShaderProgram))?;
+        let program_info = self.program_info_lookup.get_mut(&program_id).unwrap(); //we already know this is okay
+
+        let entry = program_info.attribute_lookup.entry(&name);
+
+        match entry {
+            Entry::Occupied(entry) => Ok(*entry.into_mut()),
+            Entry::Vacant(entry) => {
+                let loc = attributes::get_attribute_location(&self.gl, &program_info.program, &name)?;
+                Ok(*entry.insert(loc))
+            }
+        }
+    }
+
+    //TODO: pub fn get_attribute_location_from_global(&mut self, name:&'a str) -> Result<u32, Error> 
+
+    pub fn activate_attribute_loc(&mut self, loc:u32, opts:&attributes::AttributeOptions) {
         self.gl.vertex_attrib_pointer_with_f64(loc, opts.size, opts.data_type as u32, opts.normalized, opts.stride, opts.offset as f64);
         self.gl.enable_vertex_attrib_array(loc);
     }
 
-    pub fn activate_attribute_name(self:&'a mut Self, name:&str, opts:&attributes::AttributeOptions) -> Result<(), Error> {
-        let loc = self.get_attribute_location(&name)?;
+    pub fn activate_attribute_name_in_current_program(&mut self, name:&'a str, opts:&attributes::AttributeOptions) -> Result<(), Error> {
+        let loc = self.get_attribute_location_from_current_program(&name)?;
 
         self.activate_attribute_loc(loc, &opts);
 
@@ -182,22 +202,51 @@ impl<'a> WebGlRenderer<'a> {
     }
 
     //EXTENSIONS
-    fn get_extension(self:&'a mut Self, name:&'a str) -> Result<&js_sys::Object, Error> {
-        match self.extension_lookup.get(&name) {
-            Some(ext) => Ok(ext),
-            None => {
-                let ext = extensions::get_extension(&self.gl, &name)?;
-                self.extension_lookup.insert(&name, ext);
-                self.extension_lookup.get(&name).ok_or(Error::from(NativeError::NoExtension))
+    fn get_extension(&mut self, name:&'a str) -> Result<&js_sys::Object, Error> {
+        let entry = self.extension_lookup.entry(&name);
+
+        match entry {
+            Entry::Occupied(entry) => Ok(entry.into_mut()),
+            Entry::Vacant(entry) => {
+               let ext = extensions::get_extension(&self.gl, &name)?;
+               Ok(entry.insert(ext))
             }
         }
     }
 
-    pub fn get_extension_instanced_arrays(self:&'a mut Self) -> Result<extensions::AngleInstancedArrays, Error> {
+    pub fn get_extension_instanced_arrays(&mut self) -> Result<&extensions::AngleInstancedArrays, Error> {
         self.get_extension("ANGLE_instanced_arrays")
-            .map(|ext| ext.unchecked_into::<extensions::AngleInstancedArrays>())
+            .map(|ext| ext.unchecked_ref::<extensions::AngleInstancedArrays>())
     }
 
-    //TODO - uniforms and textures
+    //UNIFORMS
+    pub fn get_uniform_location_in_current_program(&mut self, name:&'a str) -> Result<&WebGlUniformLocation, Error> {
+
+        let program_id = self.current_program_id.ok_or(Error::from(NativeError::MissingShaderProgram))?;
+        let program_info = self.program_info_lookup.get_mut(&program_id).unwrap(); //we already know this is okay
+
+        let entry = program_info.uniform_lookup.entry(&name);
+
+        match entry {
+            Entry::Occupied(entry) => Ok(entry.into_mut()),
+            Entry::Vacant(entry) => {
+               let loc = uniforms::get_uniform_location(&self.gl, &program_info.program, &name)?;
+               Ok(entry.insert(loc))
+            }
+        }
+    }
+
+    pub fn set_uniform_data_in_current_program(&mut self, name:&'a str, transpose: bool, data: &uniforms::UniformData) -> Result<(), Error> {
+        let loc = self.get_uniform_location_in_current_program(&name)?.clone(); //meh... it's just a number, I think...
+        self.set_uniform_data_loc(&loc, transpose, &data);
+        Ok(())
+    }
+
+    pub fn set_uniform_data_loc(&self, loc:&WebGlUniformLocation, transpose: bool, data: &uniforms::UniformData) {
+        //Maybe compare to local cache?
+        uniforms::set_uniform_data(&self.gl, &loc, transpose, &data);
+    }
+
+    //TEXTURES - todo
 }
 

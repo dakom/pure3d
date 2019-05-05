@@ -13,14 +13,14 @@ use web_sys::{console};
 use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::*;
 
-pub struct InstancingScene {
-    webgl_renderer: Rc<RefCell<WebGlRenderer>>, 
+pub struct InstancingScene <'a> {
+    webgl_renderer: Rc<RefCell<WebGlRenderer<'a>>>, 
     camera_matrix:[f32;16],
     instance_data:InstancingInstanceData,
     render_data:InstancingRenderData,
 }
 
-impl InstancingScene {
+impl <'a> InstancingScene <'a> {
     pub fn new(webgl_renderer:Rc<RefCell<WebGlRenderer>>) -> impl Future<Item = Box<InstancingScene>, Error = Error> {
         InstancingInstanceData::new()
             .and_then(|instance_data| {
@@ -47,7 +47,7 @@ impl InstancingScene {
     }
 }
 
-impl Scene for InstancingScene {
+impl <'a> Scene for InstancingScene<'a> {
     fn id(self:&Self) -> &str {
         "instancing"
     }
@@ -74,7 +74,7 @@ impl Scene for InstancingScene {
 }
 
 
-impl WebGlRender for InstancingScene {
+impl <'a>WebGlRender for InstancingScene<'a> {
     fn render(self: &Self, webgl_renderer:&mut WebGlRenderer) -> Result<(), Error> {
         let ext = webgl_renderer.get_extension_instanced_arrays()?;
 
