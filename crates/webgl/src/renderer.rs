@@ -8,7 +8,7 @@ use std::collections::hash_map::VacantEntry;
 use std::collections::hash_map::Entry;
 use wasm_bindgen::prelude::*;
 use web_sys::{console};
-use web_sys::{HtmlCanvasElement, WebGlProgram, WebGlBuffer, WebGlRenderingContext, WebGlUniformLocation};
+use web_sys::{HtmlCanvasElement, WebGlProgram, WebGlBuffer, WebGlRenderingContext, WebGlUniformLocation, WebGlTexture};
 use super::enums::{DataType, BufferTarget, BufferUsage};
 use super::errors::*;
 use super::canvas;
@@ -17,6 +17,7 @@ use super::shader;
 use super::attributes;
 use super::buffers;
 use super::uniforms;
+use super::textures;
 use wasm_bindgen::JsCast;
 
 pub struct WebGlRenderer <'a> {
@@ -32,6 +33,8 @@ pub struct WebGlRenderer <'a> {
     buffer_lookup: HashMap<u64, WebGlBuffer>,
     extension_lookup: HashMap<&'a str, js_sys::Object>,
     global_attribute_lookup: HashMap<&'a str, u32>,
+    texture_lookup:HashMap<u64, WebGlTexture>,
+    current_texture_id: Option<u64>
 }
 
 struct ProgramInfo <'a> {
@@ -69,7 +72,9 @@ impl<'a> WebGlRenderer<'a> {
                 program_info_lookup: HashMap::new(),
                 buffer_lookup: HashMap::new(),
                 extension_lookup: HashMap::new(),
-                global_attribute_lookup: HashMap::new()
+                global_attribute_lookup: HashMap::new(),
+                texture_lookup: HashMap::new(),
+                current_texture_id: None
             })
     }
 
@@ -236,17 +241,73 @@ impl<'a> WebGlRenderer<'a> {
         }
     }
 
-    pub fn set_uniform_data_in_current_program(&mut self, name:&'a str, transpose: bool, data: &uniforms::UniformData) -> Result<(), Error> {
+    pub fn set_uniform_name_in_current_program(&mut self, name:&'a str, data: uniforms::UniformData) -> Result<(), Error> {
         let loc = self.get_uniform_location_in_current_program(&name)?.clone(); //meh... it's just a number, I think...
-        self.set_uniform_data_loc(&loc, transpose, &data);
+        self.set_uniform_loc(&loc, data);
         Ok(())
     }
 
-    pub fn set_uniform_data_loc(&self, loc:&WebGlUniformLocation, transpose: bool, data: &uniforms::UniformData) {
+    pub fn set_uniform_loc(&self, loc:&WebGlUniformLocation, data: uniforms::UniformData) {
         //Maybe compare to local cache?
-        uniforms::set_uniform_data(&self.gl, &loc, transpose, &data);
+        uniforms::set_uniform_data(&self.gl, &loc, data);
     }
 
-    //TEXTURES - todo
+    pub fn set_uniform_matrix_name_in_current_program(&mut self, name:&'a str, data: uniforms::UniformMatrixData) -> Result<(), Error> {
+        let loc = self.get_uniform_location_in_current_program(&name)?.clone(); //meh... it's just a number, I think...
+        self.set_uniform_matrix_loc(&loc, data);
+        Ok(())
+    }
+
+    pub fn set_uniform_matrix_loc(&self, loc:&WebGlUniformLocation, data: uniforms::UniformMatrixData) {
+        //Maybe compare to local cache?
+        uniforms::set_uniform_matrix_data(&self.gl, &loc, data);
+    }
+
+    //TEXTURES
+    pub fn create_texture(&mut self) -> Result<u64, Error> {
+        let texture = self.gl.create_texture().ok_or(Error::from(NativeError::NoCreateTexture))?;
+
+        let id = self.program_info_lookup.keys().max().map_or(0, |x| x + 1);
+
+        self.texture_lookup.insert(id, texture);
+
+        Ok(id)
+    }
+
+    //Texture assigning will bind the texture - but no slot is activated, so current_texture_id is reset to None if it isn't the same
+    pub fn assign_simple_texture (&mut self, texture_id:u64, opts:&textures::SimpleTextureOptions, src:&textures::WebGlTextureSource) -> Result<(), Error> {
+
+        let texture = self.texture_lookup.get(&texture_id).ok_or(Error::from(NativeError::MissingTexture))?;
+
+        textures::assign_simple_texture(&self.gl, &opts, &src, &texture)
+
+    }
+
+    pub fn assign_simple_texture_mips (&mut self, texture_id:u64, opts:&textures::SimpleTextureOptions, srcs:&[&textures::WebGlTextureSource]) -> Result<(), Error> {
+        let texture = self.texture_lookup.get(&texture_id).ok_or(Error::from(NativeError::MissingTexture))?;
+
+        textures::assign_simple_texture_mips(&self.gl, &opts, &srcs, &texture)
+    }
+
+
+    pub fn assign_texture (&mut self, texture_id: u64, opts:&textures::TextureOptions, set_parameters:Option<impl Fn(&WebGlRenderingContext) -> ()>, src:&textures::WebGlTextureSource) -> Result<(), Error> {
+        let texture = self.texture_lookup.get(&texture_id).ok_or(Error::from(NativeError::MissingTexture))?;
+
+        textures::assign_texture(&mut self.gl, &opts, set_parameters, &src, &texture)
+    }
+
+    pub fn assign_texture_mips (&mut self, texture_id: u64, opts:&textures::TextureOptions, set_parameters:Option<impl Fn(&WebGlRenderingContext) -> ()>, srcs:&[&textures::WebGlTextureSource]) -> Result<(), Error> {
+        let texture = self.texture_lookup.get(&texture_id).ok_or(Error::from(NativeError::MissingTexture))?;
+
+        textures::assign_texture_mips(&self.gl, &opts, set_parameters, &srcs, &texture)
+    }
+
+    //TODO - Texture switching / activation (use current_texture_id)
+
+    //DRAWING
+    pub fn draw_arrays(&self, mode: u32, first: i32, count: i32) {
+        self.gl.draw_arrays(mode, first, count);
+    }
+    //TODO - blend funcs and stuff
 }
 

@@ -7,6 +7,7 @@
     "bundle": "npm run _clean:dist && npm run _build:rust:prod && cross-env NODE_ENV=production webpack --progress --config webpack.prod.js && cpy ./site/static ./dist/static && cpy ./site/_redirects ./dist/_redirects",
     "bundle:no-opt": "npm run _clean:dist && npm run _build:rust:prod-no-opt && cross-env NODE_ENV=production webpack --progress --config webpack.prod.js && cpy ./site/static ./dist/static && cpy ./site/_redirects ./dist/_redirects",
     "dev": "npm run _build:rust:dev && npm-run-all -p _dev:server _dev:webpack-server _dev:watch:rust _dev:localcdn",
+    "check": "cross-env RUSTFLAGS=\"-A warnings\" cargo check",
     "_dev:server": "http-server ../assets",
     "_dev:localcdn": "node ./dev-utils/localcdn.js",
     "_clean:dist": "rimraf ./dist",

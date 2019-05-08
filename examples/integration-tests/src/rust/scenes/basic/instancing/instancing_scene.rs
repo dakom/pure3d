@@ -1,4 +1,3 @@
-use crate::rust::helpers::data::*;
 use crate::rust::helpers::matrix::*;
 use super::instancing_data::*;
 use super::instancing_render_data::*;
@@ -9,9 +8,7 @@ use pure3d_webgl::errors::*;
 use std::rc::Rc;
 use std::cell::RefCell;
 use futures::future::{Future, result};
-use web_sys::{console};
-use wasm_bindgen::JsCast;
-use wasm_bindgen::prelude::*;
+use pure3d_webgl::uniforms::{UniformMatrixData};
 
 pub struct InstancingScene <'a> {
     webgl_renderer: Rc<RefCell<WebGlRenderer<'a>>>, 
@@ -76,32 +73,22 @@ impl <'a> Scene for InstancingScene<'a> {
 
 impl <'a>WebGlRender for InstancingScene<'a> {
     fn render(self: &Self, webgl_renderer:&mut WebGlRenderer) -> Result<(), Error> {
-        let ext = webgl_renderer.get_extension_instanced_arrays()?;
-
-        let gl = webgl_renderer.context();
         let render_data = &self.render_data; 
 
-
-        //only because the gl.uniform calls require passing a mutable matrix
-        //see https://github.com/rustwasm/wasm-bindgen/issues/1131
-        //and https://github.com/rustwasm/wasm-bindgen/issues/1005
-
-        let mut temp_mut_matrix:[f32;16] = [0.0;16];
-        let mut temp_mut_vec4:[f32;4] = [0.0;4];
-
+        let loc = webgl_renderer.get_uniform_location_in_current_program("u_modelViewProjection")?;
+        //instancing
+        {
+            let ext = webgl_renderer.get_extension_instanced_arrays()?;
+            ext.vertex_attrib_divisor_angle(&loc, 1);
+        }
         //scale
-        temp_mut_matrix.copy_from_slice(&render_data.scale_matrix);
-        let loc = webgl_renderer.get_uniform_location(&render_data.program, "u_size")?;
-        gl.uniform_matrix4fv_with_f32_array(loc.as_ref(), false, &mut temp_mut_matrix);
+        webgl_renderer.set_uniform_matrix_name_in_current_program("u_size", UniformMatrixData::FLOAT_4(&render_data.scale_matrix));
 
         //model-view-projection
-        temp_mut_matrix.copy_from_slice(&render_data.mvp_matrix);
-        let loc = gl.get_uniform_location(&render_data.program, "u_modelViewProjection");
-        gl.uniform_matrix4fv_with_f32_array(loc.as_ref(), false, &mut temp_mut_matrix);
-      
-        ext.vertex_attrib_divisor_angle(loc.as_ref(), 1);
+        webgl_renderer.set_uniform_matrix_name_in_current_program("u_modelViewProjection", UniformMatrixData::FLOAT_4(&render_data.mvp_matrix));
+
         //draw!
-        gl.draw_arrays(BeginMode::TriangleStrip as u32, 0, 4);
+        webgl_renderer.draw_arrays(BeginMode::TriangleStrip as u32, 0, 4);
 
         Ok(())
     }

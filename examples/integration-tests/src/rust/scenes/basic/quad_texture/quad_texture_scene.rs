@@ -1,4 +1,3 @@
-use crate::rust::helpers::data::*;
 use crate::rust::helpers::matrix::*;
 use super::quad_texture_data::*;
 use crate::rust::scenes::scene::{Scene};
@@ -8,9 +7,7 @@ use pure3d_webgl::errors::*;
 use std::rc::Rc;
 use std::cell::RefCell;
 use futures::future::{Future, result};
-use web_sys::{console};
-use wasm_bindgen::JsCast;
-use wasm_bindgen::prelude::*;
+use pure3d_webgl::uniforms::{UniformData, UniformMatrixData};
 
 pub struct QuadTextureScene <'a> {
     webgl_renderer: Rc<RefCell<WebGlRenderer<'a>>>, 
@@ -71,33 +68,19 @@ impl <'a> Scene for QuadTextureScene <'a> {
 
 impl <'a> WebGlRender for QuadTextureScene <'a> {
     fn render(self: &Self, webgl_renderer:&mut WebGlRenderer) -> Result<(), Error> {
-        let gl = webgl_renderer.context();
         let render_data = &self.render_data; 
 
-        //only because the gl.uniform calls require passing a mutable matrix
-        //see https://github.com/rustwasm/wasm-bindgen/issues/1131
-        //and https://github.com/rustwasm/wasm-bindgen/issues/1005
-
-        let mut temp_mut_matrix:[f32;16] = [0.0;16];
-        let mut temp_mut_vec4:[f32;4] = [0.0;4];
-
         //scale
-        temp_mut_matrix.copy_from_slice(&render_data.scale_matrix);
-        let loc = gl.get_uniform_location(&render_data.program, "u_size");
-        gl.uniform_matrix4fv_with_f32_array(loc.as_ref(), false, &mut temp_mut_matrix);
+        webgl_renderer.set_uniform_matrix_name_in_current_program("u_size", UniformMatrixData::FLOAT_4(&render_data.scale_matrix));
 
         //model-view-projection
-        temp_mut_matrix.copy_from_slice(&render_data.mvp_matrix);
-        let loc = gl.get_uniform_location(&render_data.program, "u_modelViewProjection");
-        gl.uniform_matrix4fv_with_f32_array(loc.as_ref(), false, &mut temp_mut_matrix);
+        webgl_renderer.set_uniform_matrix_name_in_current_program("u_modelViewProjection", UniformMatrixData::FLOAT_4(&render_data.mvp_matrix));
 
         //color
-        temp_mut_vec4.copy_from_slice(&render_data.color_vec);
-        let loc = gl.get_uniform_location(&render_data.program, "u_color");
-        gl.uniform4fv_with_f32_array(loc.as_ref(), &mut temp_mut_vec4);
+        webgl_renderer.set_uniform_name_in_current_program("u_color", UniformData::FLOAT_4(&render_data.color_vec));
        
         //draw!
-        gl.draw_arrays(BeginMode::TriangleStrip as u32, 0, 4);
+        webgl_renderer.draw_arrays(BeginMode::TriangleStrip as u32, 0, 4);
 
         Ok(())
     }

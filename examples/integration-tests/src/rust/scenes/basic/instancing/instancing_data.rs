@@ -1,15 +1,7 @@
 use crate::rust::helpers::data::*;
-use crate::rust::helpers::matrix::*;
 use pure3d_webgl::errors::*;
-use pure3d_webgl::enums::{BufferTarget, BufferUsage, DataType, PixelFormat};
-use pure3d_webgl::renderer::WebGlRenderer;
-use pure3d_webgl::texture::{assign_simple_texture, SimpleTextureOptions, WebGlTextureSource};
-use pure3d_webgl::*;
 use web_sys_loaders::*;
-use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsCast;
-use web_sys::{WebGlRenderingContext, WebGlProgram, WebGlBuffer, HtmlImageElement, WebGlTexture};
-use wasm_bindgen_futures::{future_to_promise, spawn_local, JsFuture};
+use web_sys::{HtmlImageElement};
 use futures::future::{Future};
 use rand::rngs::{OsRng};
 use rand::{Rng};
@@ -82,8 +74,8 @@ impl InstancingInstanceData {
 
     pub fn update(self:&mut Self, time_stamp:f64) {
         for bunny in &mut self.bunnies {
-            bunny.pos.x += (bunny.traj.x * time_stamp * bunny.speed);
-            bunny.pos.y += (bunny.traj.y * time_stamp * bunny.speed);
+            bunny.pos.x += bunny.traj.x * time_stamp * bunny.speed;
+            bunny.pos.y += bunny.traj.y * time_stamp * bunny.speed;
         }
     }
 }

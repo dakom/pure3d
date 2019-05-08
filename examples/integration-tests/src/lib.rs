@@ -6,20 +6,18 @@ extern crate wasm_bindgen;
 extern crate wasm_bindgen_futures;
 extern crate rand;
 
-use web_sys::{console};
 use crate::rust::scenes::scene::{Scene};
 use crate::rust::scenes::basic::quad::quad_scene::*;
 use crate::rust::scenes::basic::quad_texture::quad_texture_scene::*;
 use crate::rust::scenes::basic::instancing::instancing_scene::*;
 use crate::rust::dom_handlers::*;
 use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsCast;
 use pure3d_webgl::renderer::*; 
 use pure3d_webgl::errors::*; 
 use std::rc::Rc;
 use std::cell::RefCell;
 use futures::future::{Future, result};
-use wasm_bindgen_futures::{JsFuture, future_to_promise};
+use wasm_bindgen_futures::{future_to_promise};
 
 #[wasm_bindgen]
 pub extern "C" fn run(
@@ -74,7 +72,7 @@ pub extern "C" fn run(
 //should work... see: https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=adfb0e3366e47fa59a4942a48376f685
 fn get_scene(scene_name:&str, webgl_renderer:Rc<RefCell<WebGlRenderer<'static>>>) -> Box<dyn Future<Item = Box<dyn Scene + 'static>, Error = Error>>{
 
-    match(scene_name) {
+    match scene_name {
         "quad" => Box::new(QuadScene::new(webgl_renderer).map(|scene| scene as Box<Scene + 'static>)),
         "quad_texture" => Box::new(QuadTextureScene::new(webgl_renderer).map(|scene| scene as Box<Scene + 'static>)),
         "instancing" => Box::new(InstancingScene::new(webgl_renderer).map(|scene| scene as Box<Scene + 'static>)),

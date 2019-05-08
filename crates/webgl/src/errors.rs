@@ -16,6 +16,8 @@ pub enum NativeError {
     MissingShaderProgram,
     NoCreateBuffer,
     NoExistingBuffer,
+    NoCreateTexture,
+    MissingTexture,
 }
 
 impl Error {
@@ -45,6 +47,8 @@ impl NativeError {
             NativeError::NoCreateBuffer => "couldn't create buffer",
             NativeError::NoExistingBuffer => "no existing buffer",
             NativeError::MissingShaderProgram => "No shader program activated",
+            NativeError::NoCreateTexture => "unable to create texture",
+            NativeError::MissingTexture => "couldn't get texture",
         }
     }
 }

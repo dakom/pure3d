@@ -53,7 +53,7 @@ pub struct TextureOptions {
 }
 
 fn get_texture_options_from_simple(opts:&SimpleTextureOptions) -> TextureOptions {
-    TextureOptions{
+    TextureOptions {
         internalFormat: opts.pixelFormat as i32,
         dataFormat: opts.pixelFormat as u32,
         dataType: opts.dataType as u32,
@@ -99,7 +99,6 @@ fn simple_parameters (gl:&WebGlRenderingContext, opts:&SimpleTextureOptions, use
         gl.tex_parameteri(bind_target, TextureParameterName::TextureMagFilter as u32, opts.filterMag as i32); 
     }
 }
-
 
 pub fn assign_texture (gl:&WebGlRenderingContext, opts:&TextureOptions,set_parameters:Option<impl Fn(&WebGlRenderingContext) -> ()>, src:&WebGlTextureSource, dest:&WebGlTexture) -> Result<(), Error> {
     assign_texture_mips(&gl, &opts, set_parameters, &[src], &dest)

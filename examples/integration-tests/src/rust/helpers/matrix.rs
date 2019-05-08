@@ -37,7 +37,7 @@ pub fn write_position_matrix(x:f64, y:f64, z:f64, out:&mut [f32]) {
   out[15] = 1.0;
 }
 
-pub fn write_ortho(left:f64, right:f64, bottom:f64, top:f64, near:f64, far:f64, out:&mut [f32;16]) {
+pub fn write_ortho(left:f64, right:f64, bottom:f64, top:f64, near:f64, far:f64, out:&mut [f32]) {
   let lr = 1.0 / (left - right);
   let bt = 1.0 / (bottom - top);
   let nf = 1.0 / (near - far);
@@ -59,7 +59,7 @@ pub fn write_ortho(left:f64, right:f64, bottom:f64, top:f64, near:f64, far:f64, 
   out[15] = 1.0;
 }
 
-pub fn write_multiply_matrix(a:&[f32;16], b:&[f32;16], out:&mut [f32;16]) {
+pub fn write_multiply_matrix(a:&[f32;16], b:&[f32;16], out:&mut [f32]) {
 
   let a00 = a[0]; 
   let a01 = a[1]; 

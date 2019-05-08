@@ -1,4 +1,3 @@
-use crate::rust::scenes::basic::quad::quad_scene::*;
 use crate::rust::scenes::scene::Scene;
 
 use web_sys::{console};
@@ -69,7 +68,7 @@ pub fn start_ticker <T:'static + Scene + ?Sized>(keep_alive: Rc<RefCell<bool>>, 
         //see: https://github.com/rustwasm/wasm-bindgen/blob/master/examples/request-animation-frame/src/lib.rs
         *g.borrow_mut() = Some(Closure::wrap(Box::new(move |time_stamp| {
             
-            if(!*keep_alive.borrow()) {
+            if !*keep_alive.borrow() {
                 console::log_1(&JsValue::from_str("STOPPING TICK!!!"));
                 f.borrow_mut().take();
             } else {

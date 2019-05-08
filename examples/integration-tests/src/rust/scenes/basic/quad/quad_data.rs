@@ -4,7 +4,6 @@ use pure3d_webgl::errors::*;
 use pure3d_webgl::enums::{BufferTarget, BufferUsage, DataType};
 use pure3d_webgl::renderer::WebGlRenderer;
 use pure3d_webgl::*;
-use web_sys::{WebGlRenderingContext, WebGlProgram, WebGlBuffer};
 
 pub struct QuadInstanceData {
     pub pos: Point,
@@ -51,7 +50,7 @@ impl QuadInstanceData {
 pub struct QuadRenderData {
     pub scale_matrix:[f32;16],
     pub mvp_matrix:[f32;16],
-    pub color_vec:[f32;4], 
+    pub color_vec:[f32;4],
     pub program_id: u64    
 }
 
@@ -76,9 +75,9 @@ impl QuadRenderData {
 
         Ok(QuadRenderData{
             program_id,
-            scale_matrix: [0.0;16], 
-            mvp_matrix: [0.0;16], 
-            color_vec: [0.0;4], 
+            scale_matrix: [0.0;16],
+            mvp_matrix: [0.0;16],
+            color_vec: [0.0;4]
         })
     }
 

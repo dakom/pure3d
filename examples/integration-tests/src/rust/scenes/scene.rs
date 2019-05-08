@@ -1,7 +1,4 @@
-use pure3d_webgl::renderer::WebGlRenderer;
 use pure3d_webgl::errors::*;
-use std::rc::Rc;
-use std::cell::RefCell;
 
 pub trait Scene {
     fn id(&self) -> &str;
