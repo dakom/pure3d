@@ -75,20 +75,21 @@ impl <'a>WebGlRender for InstancingScene<'a> {
     fn render(self: &Self, webgl_renderer:&mut WebGlRenderer) -> Result<(), Error> {
         let render_data = &self.render_data; 
 
-        let loc = webgl_renderer.get_uniform_location_in_current_program("u_modelViewProjection")?;
+        //TODO - the instancing shouldn't try and use the uniform location
+        //Rather it should use the attribute location
+        let loc = webgl_renderer.get_uniform_loc("u_modelViewProjection")?;
         //instancing
-        {
-            let ext = webgl_renderer.get_extension_instanced_arrays()?;
-            ext.vertex_attrib_divisor_angle(&loc, 1);
-        }
+        let ext = webgl_renderer.get_extension_instanced_arrays()?;
+        ext.vertex_attrib_divisor_angle(&loc, 1);
         //scale
-        webgl_renderer.set_uniform_matrix_name_in_current_program("u_size", UniformMatrixData::FLOAT_4(&render_data.scale_matrix));
+        webgl_renderer.set_uniform_matrix_name("u_size", UniformMatrixData::FLOAT_4(&render_data.scale_matrix));
 
         //model-view-projection
-        webgl_renderer.set_uniform_matrix_name_in_current_program("u_modelViewProjection", UniformMatrixData::FLOAT_4(&render_data.mvp_matrix));
+        webgl_renderer.set_uniform_matrix_name("u_modelViewProjection", UniformMatrixData::FLOAT_4(&render_data.mvp_matrix));
 
         //draw!
-        webgl_renderer.draw_arrays(BeginMode::TriangleStrip as u32, 0, 4);
+        ext.draw_arrays_instanced_angle(BeginMode::TriangleStrip as u32, 0, 4, 1);
+        //webgl_renderer.draw_arrays(BeginMode::TriangleStrip as u32, 0, 4);
 
         Ok(())
     }

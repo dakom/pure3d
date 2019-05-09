@@ -10,12 +10,14 @@ use super::instancing_data::*;
 pub struct InstancingRenderData {
     pub scale_matrix:[f32;16],
     pub mvp_matrix:[f32;16],
-    pub program_id:u64,
-    pub texture_id:u64
+    pub program_id: usize,
+    pub texture_id: usize,
 }
 
 impl InstancingRenderData {
     pub fn new(webgl_renderer:&mut WebGlRenderer, instance_data:&InstancingInstanceData) -> Result<InstancingRenderData, Error> {
+
+        webgl_renderer.create_extension_instanced_arrays()?;
 
         let program_id = webgl_renderer.compile_program(
             include_str!("shaders/Instancing-Vertex.glsl"),

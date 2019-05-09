@@ -51,7 +51,7 @@ pub struct QuadRenderData {
     pub scale_matrix:[f32;16],
     pub mvp_matrix:[f32;16],
     pub color_vec:[f32;4],
-    pub program_id: u64    
+    pub program_id: usize, 
 }
 
 impl QuadRenderData {

@@ -65,7 +65,6 @@ impl <'a> Scene for QuadScene<'a> {
         
         let mut webgl_renderer_ref = self.webgl_renderer.try_borrow_mut().map_err(|e| e.to_string())?;
         self.render(&mut webgl_renderer_ref);
-
         Ok(())
     }
 
@@ -82,13 +81,13 @@ impl <'a> WebGlRender for QuadScene<'a> {
         let render_data = &self.render_data; 
 
         //scale
-        webgl_renderer.set_uniform_matrix_name_in_current_program("u_size", UniformMatrixData::FLOAT_4(&render_data.scale_matrix));
+        webgl_renderer.set_uniform_matrix_name("u_size", UniformMatrixData::FLOAT_4(&render_data.scale_matrix));
 
         //model-view-projection
-        webgl_renderer.set_uniform_matrix_name_in_current_program("u_modelViewProjection", UniformMatrixData::FLOAT_4(&render_data.mvp_matrix));
+        webgl_renderer.set_uniform_matrix_name("u_modelViewProjection", UniformMatrixData::FLOAT_4(&render_data.mvp_matrix));
 
         //color
-        webgl_renderer.set_uniform_name_in_current_program("u_color", UniformData::FLOAT_4(&render_data.color_vec));
+        webgl_renderer.set_uniform_name("u_color", UniformData::FLOAT_4(&render_data.color_vec));
        
         //draw!
         webgl_renderer.draw_arrays(BeginMode::TriangleStrip as u32, 0, 4);

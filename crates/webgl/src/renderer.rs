@@ -3,6 +3,10 @@ extern crate js_sys;
 extern crate wasm_bindgen;
 
 use std::collections::HashMap;
+use std::cell::Cell;
+use std::cell::RefCell;
+use std::cell::Ref;
+use std::cell::RefMut;
 use std::collections::hash_map::OccupiedEntry;
 use std::collections::hash_map::VacantEntry;
 use std::collections::hash_map::Entry;
@@ -20,25 +24,30 @@ use super::uniforms;
 use super::textures;
 use wasm_bindgen::JsCast;
 
+type ID = usize;
+
 pub struct WebGlRenderer <'a> {
-    gl:WebGlRenderingContext,
-    canvas: HtmlCanvasElement,
+    pub gl:WebGlRenderingContext,
+    pub canvas: HtmlCanvasElement,
+
     last_width: u32,
     last_height: u32,
 
-    current_program_id: Option<u64>,
-    program_info_lookup: HashMap<u64, ProgramInfo<'a>>,
-    current_buffer_id: Option<u64>,
-    current_buffer_target: Option<BufferTarget>,
-    buffer_lookup: HashMap<u64, WebGlBuffer>,
+    program_info_lookup: RefCell<Vec<Option<ProgramInfo<'a>>>>,
+    buffer_lookup: Vec<Option<WebGlBuffer>>,
     extension_lookup: HashMap<&'a str, js_sys::Object>,
-    global_attribute_lookup: HashMap<&'a str, u32>,
-    texture_lookup:HashMap<u64, WebGlTexture>,
-    current_texture_id: Option<u64>
+    global_attribute_lookup: RefCell<HashMap<&'a str, u32>>,
+    texture_lookup: Vec<Option<WebGlTexture>>,
+
+    current_program_id: Cell<Option<ID>>,
+    current_buffer_id: Cell<Option<ID>>,
+    current_buffer_target: Cell<Option<BufferTarget>>,
+    current_texture_id: Cell<Option<ID>>,
+    current_texture_slot: Cell<Option<u32>>,
 }
 
 struct ProgramInfo <'a> {
-    pub id:u64,
+    pub id:ID,
     pub program: WebGlProgram,
     pub attribute_lookup: HashMap<&'a str, u32>,
     pub uniform_lookup: HashMap<&'a str, WebGlUniformLocation>
@@ -66,24 +75,17 @@ impl<'a> WebGlRenderer<'a> {
                 canvas,
                 last_width: 0,
                 last_height: 0,
-                current_program_id: None,
-                current_buffer_id: None,
-                current_buffer_target: None,
-                program_info_lookup: HashMap::new(),
-                buffer_lookup: HashMap::new(),
+                program_info_lookup: RefCell::new(Vec::new()),
+                buffer_lookup: Vec::new(),
                 extension_lookup: HashMap::new(),
-                global_attribute_lookup: HashMap::new(),
-                texture_lookup: HashMap::new(),
-                current_texture_id: None
+                global_attribute_lookup: RefCell::new(HashMap::new()),
+                texture_lookup: Vec::new(),
+                current_program_id: Cell::new(None),
+                current_buffer_id: Cell::new(None),
+                current_buffer_target: Cell::new(None),
+                current_texture_id: Cell::new(None),
+                current_texture_slot: Cell::new(None)
             })
-    }
-
-    pub fn context(&self) -> &WebGlRenderingContext {
-        &self.gl
-    }
-
-    pub fn context_mut(&mut self) -> &mut WebGlRenderingContext {
-        &mut self.gl
     }
 
     pub fn resize(&mut self, width:u32, height:u32) {
@@ -104,101 +106,112 @@ impl<'a> WebGlRenderer<'a> {
 
     //SHADERS
 
-    pub fn compile_program(&mut self, vertex:&str, fragment:&str) -> Result<u64, Error> {
+    pub fn compile_program(&mut self, vertex:&str, fragment:&str) -> Result<ID, Error> {
         let program = shader::compile_program(&self.gl, &vertex, &fragment)?;
 
-        let id = self.program_info_lookup.keys().max().map_or(0, |x| x + 1);
+        let id = {
+            let mut program_info_lookup = self.program_info_lookup.borrow_mut();
+            let id = program_info_lookup.iter().count();
 
-        let program_info = ProgramInfo {
-            id,
-            program,
-            attribute_lookup: HashMap::new(),
-            uniform_lookup: HashMap::new() 
+            let program_info = ProgramInfo {
+                id,
+                program,
+                attribute_lookup: HashMap::new(),
+                uniform_lookup: HashMap::new()
+            };
+
+            program_info_lookup.push(Some(program_info));
+
+            id
         };
 
-        self.program_info_lookup.insert(id, program_info);
         self.activate_program(id)?;
 
         Ok(id)
     }
 
-    fn get_current_program_info(&self) -> Result<&'a ProgramInfo, Error> {
-        self.current_program_id
-            .and_then(|id| self.program_info_lookup.get(&id))
-            .ok_or(Error::from(NativeError::MissingShaderProgram))
-    }
+    pub fn activate_program(&self, program_id: ID) -> Result<(), Error> {
+        if Some(program_id) != self.current_program_id.get() {
+            self.current_program_id.set(Some(program_id));
+            let mut program_info_lookup = self.program_info_lookup.borrow_mut();
+            let program_id = self.current_program_id.get().ok_or(Error::from(NativeError::MissingShaderProgram))?;
+            let program_info = program_info_lookup[program_id].as_mut().ok_or(Error::from(NativeError::MissingShaderProgram))?;
 
-
-    pub fn activate_program(&mut self, program_id: u64) -> Result<(), Error> {
-        if Some(program_id) != self.current_program_id {
-            self.current_program_id = Some(program_id);
-            self.get_current_program_info()
-                .map(|program_info| {
-                    self.gl.use_program(Some(&program_info.program));
-                })
+            self.gl.use_program(Some(&program_info.program));
+            Ok(())
         } else {
             Ok(())
         }
     }
 
     //BUFFERS
-    pub fn create_buffer(&mut self) -> Result<u64, Error> {
+    pub fn create_buffer(&mut self) -> Result<ID, Error> {
 
         let buffer = self.gl.create_buffer()
             .ok_or(Error::from(NativeError::NoCreateBuffer))?;
 
-        let id = self.buffer_lookup.keys().max().map_or(0, |x| x + 1);
+        let id = self.buffer_lookup.iter().count();
         
-        self.buffer_lookup.insert(id, buffer);
+        self.buffer_lookup.push(Some(buffer));
 
         Ok(id)
     }
 
-    pub fn activate_buffer(&mut self, id:u64, target: BufferTarget) -> Result<(), Error> {
-        let buffer = self.buffer_lookup.get(&id)
-            .ok_or(Error::from(NativeError::NoExistingBuffer))?;
+    pub fn activate_buffer(&self, buffer_id:ID, target: BufferTarget) -> Result<(), Error> {
 
-        if Some(id) != self.current_buffer_id || Some(target) != self.current_buffer_target {
+        if Some(buffer_id) != self.current_buffer_id.get() || Some(target) != self.current_buffer_target.get() {
+            self.current_buffer_id.set(Some(buffer_id));
+            self.current_buffer_target.set(Some(target));
+
+            let buffer = self.get_current_buffer()?; 
             buffers::bind_buffer(&self.gl, target, &buffer);
-            self.current_buffer_id = Some(id);
-            self.current_buffer_target = Some(target);
         }
 
         Ok(())
     }
 
-    pub fn upload_array_buffer(&mut self, id:u64, values:&[f32], target: BufferTarget, usage:BufferUsage) -> Result<(), Error> {
+    fn get_current_buffer(&self) -> Result<&WebGlBuffer, Error> {
+        self.current_buffer_id.get()
+            .and_then(|id| self.buffer_lookup[id].as_ref())
+            .ok_or(Error::from(NativeError::MissingBuffer))
+    }
+
+    pub fn upload_array_buffer(&self, id:ID, values:&[f32], target: BufferTarget, usage:BufferUsage) -> Result<(), Error> {
         self.activate_buffer(id, target)?;
 
-        buffers::upload_array_buffer(&self.gl, &values, target, usage, self.buffer_lookup.get(&id).unwrap())
+        let buffer = self.get_current_buffer()?; 
+
+        buffers::upload_array_buffer(&self.gl, &values, target, usage, &buffer)
     }
 
     //ATTRIBUTES
-    pub fn get_attribute_location_from_current_program(&mut self, name:&'a str) -> Result<u32, Error> 
+    pub fn get_attribute_location_from_current_program(&self, name:&'a str) -> Result<u32, Error> 
     
     {
-        let program_id = self.current_program_id.ok_or(Error::from(NativeError::MissingShaderProgram))?;
-        let program_info = self.program_info_lookup.get_mut(&program_id).unwrap(); //we already know this is okay
+
+        let mut program_info_lookup = self.program_info_lookup.borrow_mut();
+        let program_id = self.current_program_id.get().ok_or(Error::from(NativeError::MissingShaderProgram))?;
+        let program_info = program_info_lookup[program_id].as_mut().ok_or(Error::from(NativeError::MissingShaderProgram))?;
 
         let entry = program_info.attribute_lookup.entry(&name);
 
         match entry {
-            Entry::Occupied(entry) => Ok(*entry.into_mut()),
+            Entry::Occupied(entry) => Ok(entry.into_mut().clone()),
             Entry::Vacant(entry) => {
-                let loc = attributes::get_attribute_location(&self.gl, &program_info.program, &name)?;
-                Ok(*entry.insert(loc))
+               let loc = attributes::get_attribute_location(&self.gl, &program_info.program, &name)?;
+               Ok(entry.insert(loc).clone())
             }
         }
     }
 
-    //TODO: pub fn get_attribute_location_from_global(&mut self, name:&'a str) -> Result<u32, Error> 
+    //TODO: pub fn get_attribute_location_from_global(&self, name:&'a str) -> Result<u32, Error> 
 
-    pub fn activate_attribute_loc(&mut self, loc:u32, opts:&attributes::AttributeOptions) {
+    pub fn activate_attribute_loc(&self, loc:u32, opts:&attributes::AttributeOptions) {
         self.gl.vertex_attrib_pointer_with_f64(loc, opts.size, opts.data_type as u32, opts.normalized, opts.stride, opts.offset as f64);
         self.gl.enable_vertex_attrib_array(loc);
     }
 
-    pub fn activate_attribute_name_in_current_program(&mut self, name:&'a str, opts:&attributes::AttributeOptions) -> Result<(), Error> {
+    pub fn activate_attribute_name_in_current_program(&self, name:&'a str, opts:&attributes::AttributeOptions) -> Result<(), Error> {
         let loc = self.get_attribute_location_from_current_program(&name)?;
 
         self.activate_attribute_loc(loc, &opts);
@@ -207,97 +220,118 @@ impl<'a> WebGlRenderer<'a> {
     }
 
     //EXTENSIONS
-    fn get_extension(&mut self, name:&'a str) -> Result<&js_sys::Object, Error> {
-        let entry = self.extension_lookup.entry(&name);
-
-        match entry {
-            Entry::Occupied(entry) => Ok(entry.into_mut()),
-            Entry::Vacant(entry) => {
-               let ext = extensions::get_extension(&self.gl, &name)?;
-               Ok(entry.insert(ext))
-            }
+    fn create_extension(&mut self, name:&'a str) -> Result<&js_sys::Object, Error> {
+        if self.extension_lookup.get(&name).is_none() {
+            let ext = extensions::get_extension(&self.gl, &name)?;
+            self.extension_lookup.insert(&name, ext); 
         }
+        self.extension_lookup.get(&name).ok_or(
+            Error::from(NativeError::NoExtension)
+        )
     }
 
-    pub fn get_extension_instanced_arrays(&mut self) -> Result<&extensions::AngleInstancedArrays, Error> {
+    fn get_extension(&self, name:&'a str) -> Result<&js_sys::Object, Error> {
+        self.extension_lookup.get(&name).ok_or(
+            Error::from(NativeError::NoExtension)
+        )
+    }
+
+    pub fn create_extension_instanced_arrays(&mut self) -> Result<&extensions::AngleInstancedArrays, Error> {
+        self.create_extension("ANGLE_instanced_arrays")
+            .map(|ext| ext.unchecked_ref::<extensions::AngleInstancedArrays>())
+    }
+
+    pub fn get_extension_instanced_arrays(&self) -> Result<&extensions::AngleInstancedArrays, Error> {
         self.get_extension("ANGLE_instanced_arrays")
             .map(|ext| ext.unchecked_ref::<extensions::AngleInstancedArrays>())
     }
 
     //UNIFORMS
-    pub fn get_uniform_location_in_current_program(&mut self, name:&'a str) -> Result<&WebGlUniformLocation, Error> {
+    pub fn get_uniform_loc(&self, name:&'a str) -> Result<WebGlUniformLocation, Error> {
 
-        let program_id = self.current_program_id.ok_or(Error::from(NativeError::MissingShaderProgram))?;
-        let program_info = self.program_info_lookup.get_mut(&program_id).unwrap(); //we already know this is okay
+        let mut program_info_lookup = self.program_info_lookup.borrow_mut();
+        let program_id = self.current_program_id.get().ok_or(Error::from(NativeError::MissingShaderProgram))?;
+        let program_info = program_info_lookup[program_id].as_mut().ok_or(Error::from(NativeError::MissingShaderProgram))?;
 
         let entry = program_info.uniform_lookup.entry(&name);
 
         match entry {
-            Entry::Occupied(entry) => Ok(entry.into_mut()),
+            Entry::Occupied(entry) => Ok(entry.get().clone()),
             Entry::Vacant(entry) => {
                let loc = uniforms::get_uniform_location(&self.gl, &program_info.program, &name)?;
-               Ok(entry.insert(loc))
+               Ok(entry.insert(loc).clone())
             }
         }
     }
 
-    pub fn set_uniform_name_in_current_program(&mut self, name:&'a str, data: uniforms::UniformData) -> Result<(), Error> {
-        let loc = self.get_uniform_location_in_current_program(&name)?.clone(); //meh... it's just a number, I think...
+    pub fn set_uniform_name(&self, name:&'a str, data: uniforms::UniformData) -> Result<(), Error> {
+        let loc = self.get_uniform_loc(&name)?;
         self.set_uniform_loc(&loc, data);
         Ok(())
     }
 
     pub fn set_uniform_loc(&self, loc:&WebGlUniformLocation, data: uniforms::UniformData) {
-        //Maybe compare to local cache?
+        //TODO Maybe compare to local cache and avoid setting if data hasn't changed?
         uniforms::set_uniform_data(&self.gl, &loc, data);
     }
 
-    pub fn set_uniform_matrix_name_in_current_program(&mut self, name:&'a str, data: uniforms::UniformMatrixData) -> Result<(), Error> {
-        let loc = self.get_uniform_location_in_current_program(&name)?.clone(); //meh... it's just a number, I think...
+    pub fn set_uniform_matrix_name(&self, name:&'a str, data: uniforms::UniformMatrixData) -> Result<(), Error> {
+        let loc = self.get_uniform_loc(&name)?;
         self.set_uniform_matrix_loc(&loc, data);
         Ok(())
     }
 
     pub fn set_uniform_matrix_loc(&self, loc:&WebGlUniformLocation, data: uniforms::UniformMatrixData) {
-        //Maybe compare to local cache?
+        //TODO Maybe compare to local cache and avoid setting if data hasn't changed?
         uniforms::set_uniform_matrix_data(&self.gl, &loc, data);
     }
 
     //TEXTURES
-    pub fn create_texture(&mut self) -> Result<u64, Error> {
+    pub fn create_texture(&mut self) -> Result<ID, Error> {
         let texture = self.gl.create_texture().ok_or(Error::from(NativeError::NoCreateTexture))?;
 
-        let id = self.program_info_lookup.keys().max().map_or(0, |x| x + 1);
+        let id = self.texture_lookup.iter().count();
 
-        self.texture_lookup.insert(id, texture);
+        self.texture_lookup.push(Some(texture));
 
         Ok(id)
     }
 
-    //Texture assigning will bind the texture - but no slot is activated, so current_texture_id is reset to None if it isn't the same
-    pub fn assign_simple_texture (&mut self, texture_id:u64, opts:&textures::SimpleTextureOptions, src:&textures::WebGlTextureSource) -> Result<(), Error> {
+    //Texture assigning will bind the texture - so the slot for activations effectively becomes None 
+    pub fn assign_simple_texture (&self, texture_id:ID, opts:&textures::SimpleTextureOptions, src:&textures::WebGlTextureSource) -> Result<(), Error> {
+        let texture = self.texture_lookup[texture_id].as_ref().ok_or(Error::from(NativeError::MissingTexture))?;
 
-        let texture = self.texture_lookup.get(&texture_id).ok_or(Error::from(NativeError::MissingTexture))?;
+        self.current_texture_id.set(Some(texture_id));
+        self.current_texture_slot.set(None);
 
         textures::assign_simple_texture(&self.gl, &opts, &src, &texture)
 
     }
 
-    pub fn assign_simple_texture_mips (&mut self, texture_id:u64, opts:&textures::SimpleTextureOptions, srcs:&[&textures::WebGlTextureSource]) -> Result<(), Error> {
-        let texture = self.texture_lookup.get(&texture_id).ok_or(Error::from(NativeError::MissingTexture))?;
+    pub fn assign_simple_texture_mips (&self, texture_id:ID, opts:&textures::SimpleTextureOptions, srcs:&[&textures::WebGlTextureSource]) -> Result<(), Error> {
+        let texture = self.texture_lookup[texture_id].as_ref().ok_or(Error::from(NativeError::MissingTexture))?;
+
+        self.current_texture_id.set(Some(texture_id));
+        self.current_texture_slot.set(None);
 
         textures::assign_simple_texture_mips(&self.gl, &opts, &srcs, &texture)
     }
 
 
-    pub fn assign_texture (&mut self, texture_id: u64, opts:&textures::TextureOptions, set_parameters:Option<impl Fn(&WebGlRenderingContext) -> ()>, src:&textures::WebGlTextureSource) -> Result<(), Error> {
-        let texture = self.texture_lookup.get(&texture_id).ok_or(Error::from(NativeError::MissingTexture))?;
+    pub fn assign_texture (&self, texture_id: ID, opts:&textures::TextureOptions, set_parameters:Option<impl Fn(&WebGlRenderingContext) -> ()>, src:&textures::WebGlTextureSource) -> Result<(), Error> {
+        let texture = self.texture_lookup[texture_id].as_ref().ok_or(Error::from(NativeError::MissingTexture))?;
 
-        textures::assign_texture(&mut self.gl, &opts, set_parameters, &src, &texture)
+        self.current_texture_id.set(Some(texture_id));
+        self.current_texture_slot.set(None);
+
+        textures::assign_texture(&self.gl, &opts, set_parameters, &src, &texture)
     }
 
-    pub fn assign_texture_mips (&mut self, texture_id: u64, opts:&textures::TextureOptions, set_parameters:Option<impl Fn(&WebGlRenderingContext) -> ()>, srcs:&[&textures::WebGlTextureSource]) -> Result<(), Error> {
-        let texture = self.texture_lookup.get(&texture_id).ok_or(Error::from(NativeError::MissingTexture))?;
+    pub fn assign_texture_mips (&self, texture_id: ID, opts:&textures::TextureOptions, set_parameters:Option<impl Fn(&WebGlRenderingContext) -> ()>, srcs:&[&textures::WebGlTextureSource]) -> Result<(), Error> {
+        let texture = self.texture_lookup[texture_id].as_ref().ok_or(Error::from(NativeError::MissingTexture))?;
+
+        self.current_texture_id.set(Some(texture_id));
+        self.current_texture_slot.set(None);
 
         textures::assign_texture_mips(&self.gl, &opts, set_parameters, &srcs, &texture)
     }
