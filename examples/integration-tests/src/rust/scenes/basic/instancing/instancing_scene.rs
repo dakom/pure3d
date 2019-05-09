@@ -48,14 +48,14 @@ impl <'a> Scene for InstancingScene<'a> {
     fn id(self:&Self) -> &str {
         "instancing"
     }
-    fn tick(self:&mut Self, time_stamp:f64, delta_time:f64) -> Result<(), Error> {
+    fn tick(self:&mut Self, _time_stamp:f64, delta_time:f64) -> Result<(), Error> {
         let mut webgl_renderer_ref = self.webgl_renderer.try_borrow_mut().map_err(|e| e.to_string())?;
 
         self.instance_data.update(delta_time);
 
         for bunny in &self.instance_data.bunnies {
             self.render_data.update(&self.camera_matrix, &self.instance_data.area, &bunny.pos);
-            self.render(&mut webgl_renderer_ref);
+            self.render(&mut webgl_renderer_ref)?;
         }
         
 
@@ -82,13 +82,13 @@ impl <'a>WebGlRender for InstancingScene<'a> {
         let ext = webgl_renderer.get_extension_instanced_arrays()?;
         ext.vertex_attrib_divisor_angle(&loc, 1);
         //scale
-        webgl_renderer.set_uniform_matrix_name("u_size", UniformMatrixData::FLOAT_4(&render_data.scale_matrix));
+        webgl_renderer.set_uniform_matrix_name("u_size", UniformMatrixData::Float4(&render_data.scale_matrix))?;
 
         //model-view-projection
-        webgl_renderer.set_uniform_matrix_name("u_modelViewProjection", UniformMatrixData::FLOAT_4(&render_data.mvp_matrix));
+        webgl_renderer.set_uniform_matrix_name("u_modelViewProjection", UniformMatrixData::Float4(&render_data.mvp_matrix))?;
 
         //draw!
-        ext.draw_arrays_instanced_angle(BeginMode::TriangleStrip as u32, 0, 4, 1);
+        ext.draw_arrays_instanced_angle(BeginMode::TriangleStrip as u32, 0, 4, 1)?;
         //webgl_renderer.draw_arrays(BeginMode::TriangleStrip as u32, 0, 4);
 
         Ok(())

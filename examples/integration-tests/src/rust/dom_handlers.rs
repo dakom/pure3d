@@ -21,18 +21,18 @@ pub fn start_resize <T: 'static + Scene + ?Sized>(renderer:Rc<RefCell<WebGlRende
             .and_then(|window| {
                 get_window_size(&window)
             })
-            .map(|window_size| {
+            .and_then(|window_size| {
                 let mut renderer = renderer.borrow_mut();
                 renderer.resize(window_size.width as u32, window_size.height as u32);
 
                 let mut scene = scene.borrow_mut();
-                scene.resize(window_size.width as u32, window_size.height as u32);
+                scene.resize(window_size.width as u32, window_size.height as u32)
             })
             .map_err(|err| err.to_js())
     };
 
     //First we want to resize right away
-    cb();
+    cb()?;
 
     //Then we need to box it up in a way that can be sent to JS handler
     let js_cb = Closure::wrap(Box::new(cb) as ResizeCb); 
@@ -77,7 +77,7 @@ pub fn start_ticker <T:'static + Scene + ?Sized>(keep_alive: Rc<RefCell<bool>>, 
                 scene.tick(time_stamp, (time_stamp - last_time) / 1000.0)
                     .map_err(|err| {
                         console::log_1(&err.into());
-                    });
+                    }).unwrap();
 
                 last_time = time_stamp;
                 request_animation_frame(f.borrow().as_ref().unwrap())

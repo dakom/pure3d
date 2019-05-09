@@ -25,7 +25,7 @@ pub extern "C" fn run(
     scene_name: String, 
 ) -> js_sys::Promise {
 
-    let this = &JsValue::NULL;
+    let _this = &JsValue::NULL;
 
     //console::log_1(&JsValue::from_str(format!("Loading {}", scene_name).as_str()));
 

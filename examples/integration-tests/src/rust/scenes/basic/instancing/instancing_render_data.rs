@@ -59,9 +59,9 @@ impl InstancingRenderData {
         })
     }
 
-    pub fn update(self:&mut Self, camera_matrix:&[f32;16], area:&Area, pos:&Point) {
+    pub fn update(self:&mut Self, camera_matrix:&[f32;16], _area:&Area, pos:&Point) {
         let mut scratch_matrix:[f32;16] = [0.0;16]; 
-        let InstancingRenderData {scale_matrix, mvp_matrix, ..} = self;
+        let InstancingRenderData {mvp_matrix, ..} = self;
 
         //model-view-projection
         write_position_matrix(pos.x, pos.y, 0.0, &mut scratch_matrix);

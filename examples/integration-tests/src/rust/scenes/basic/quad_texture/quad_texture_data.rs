@@ -37,7 +37,7 @@ impl QuadTextureInstanceData {
             })
     }
 
-    pub fn update(self:&mut Self, time_stamp:f64) {
+    pub fn update(self:&mut Self, _time_stamp:f64) {
         let color = &mut self.color;
         let direction = &mut (self.direction);
         color.r += *direction;
